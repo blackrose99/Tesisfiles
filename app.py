@@ -57,8 +57,8 @@ def make_template_df():
     ])
 
 def make_example_df():
-    if os.path.exists("ejemplo_datos_estudiantes.csv"):
-        return pd.read_csv("ejemplo_datos_estudiantes.csv")
+    if os.path.exists("test50.csv"):
+        return pd.read_csv("test50.csv")
     return make_template_df()
 
 # ─────────────────────────────────────────────────────────────────
@@ -191,10 +191,10 @@ with st.sidebar:
         st.markdown("---")
         st.markdown("##### 📊 Archivo de ejemplo")
         st.download_button(
-            "⬇️ Ejemplo (20 estudiantes)",
+            "⬇️ Ejemplo (50 estudiantes)",
             make_example_df().to_csv(index=False).encode("utf-8"),
-            file_name="ejemplo_20_estudiantes.csv", mime="text/csv",
-            key="btn_ejemplo20", use_container_width=True,
+            file_name="ejemplo_50_estudiantes.csv", mime="text/csv",
+            key="btn_ejemplo50", use_container_width=True,
         )
 
     st.markdown("---")

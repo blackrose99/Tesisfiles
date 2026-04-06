@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Jan 24 22:36:01 2026
 
-@author: dajos
-"""
+# Limpieza de datos.py
+
 import pandas as pd
 from datetime import datetime
 

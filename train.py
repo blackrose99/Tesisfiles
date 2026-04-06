@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Feb 15 14:31:50 2026
-@author: dajos
-"""
+# train.py
 
 import pandas as pd
 import numpy as np

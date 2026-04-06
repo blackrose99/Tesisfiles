@@ -68,7 +68,6 @@ def clean_data(df_raw, keep_situacion=False):
     df = df_raw.copy()
     codigos = df["CODESTUDIANTE"].astype(str).tolist() if "CODESTUDIANTE" in df.columns else None
 
-    # Extraer SITUACION antes de limpiar (para evaluación)
     situacion = None
     if keep_situacion and "SITUACION" in df.columns:
         situacion = df["SITUACION"].astype(int).values
@@ -206,10 +205,10 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     threshold = st.slider(
-        "Umbral P(aprueba)",
+        "Umbral P(deserta)",
         min_value=0.0, max_value=1.0, value=0.5, step=0.01,
         key="slider_threshold",
-        help="P(aprueba) ≥ umbral → Aprueba | P(aprueba) < umbral → No aprueba (riesgo deserción)",
+        help="P(deserta) ≥ umbral → Deserta (riesgo) | P(deserta) < umbral → No deserta",
     )
 
 # ─────────────────────────────────────────────────────────────────
@@ -224,14 +223,14 @@ with tab_pred:
 
     st.markdown("""
     <div style="background-color:#f8f9fa;padding:1.2rem;border-radius:10px;
-                border-left:5px solid #667eea;margin-bottom:1.5rem;">
+                border-left:5px solid #e74c3c;margin-bottom:1.5rem;">
         <p style="color:#495057;margin:0;line-height:1.8;">
-            El modelo devuelve <strong>P(aprueba)</strong>: probabilidad de que el estudiante
-            se <em>gradúe/apruebe</em> (<code>SITUACION=1</code> en entrenamiento).<br>
+            El modelo devuelve <strong>P(deserta)</strong>: probabilidad de que el estudiante
+            <em>deserte / no complete</em> sus estudios (<code>SITUACION=1</code> en entrenamiento).<br>
             <code>P ≥ umbral</code> →
-            <span style="color:#27ae60;font-weight:bold;">Aprueba</span> &nbsp;|&nbsp;
+            <span style="color:#e74c3c;font-weight:bold;">Deserta (en riesgo)</span> &nbsp;|&nbsp;
             <code>P &lt; umbral</code> →
-            <span style="color:#e74c3c;font-weight:bold;">No aprueba</span>
+            <span style="color:#27ae60;font-weight:bold;">No deserta</span>
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -280,10 +279,12 @@ with tab_pred:
         st.success("✅ Predicciones completadas.")
 
         ids = codigos if (codigos and len(codigos) == len(df_cleaned)) else [f"EST_{i+1:04d}" for i in range(len(df_cleaned))]
+
+        # ── CORRECCIÓN CLAVE: 1 = deserta, 0 = no deserta ──────────
         df_results = pd.DataFrame({
             "identificador":    ids,
-            "p_aprueba":        np.round(probs, 4),
-            "resultado_modelo": np.where(probs >= threshold, "Aprueba", "No aprueba"),
+            "p_desercion":      np.round(probs, 4),
+            "resultado_modelo": np.where(probs >= threshold, "Deserta", "No deserta"),
         })
 
         os.makedirs(os.path.join("archivos_procesados", "resultados"), exist_ok=True)
@@ -303,44 +304,45 @@ with tab_pred:
 
         col1, col2 = st.columns([2, 1])
         with col1:
-            counts = df_results["resultado_modelo"].value_counts().reindex(["Aprueba", "No aprueba"]).fillna(0).astype(int)
+            counts = df_results["resultado_modelo"].value_counts().reindex(["No deserta", "Deserta"]).fillna(0).astype(int)
             total  = len(df_results)
             m1, m2, m3 = st.columns(3)
             m1.metric("👥 Total", total)
-            m2.metric("✅ Aprueban", counts.get("Aprueba", 0), f"{counts.get('Aprueba', 0)/total*100:.1f}%")
-            m3.metric("❌ No aprueban", counts.get("No aprueba", 0), f"{counts.get('No aprueba', 0)/total*100:.1f}%")
+            m2.metric("✅ No desertan", counts.get("No deserta", 0), f"{counts.get('No deserta', 0)/total*100:.1f}%")
+            m3.metric("🚨 Desertan",    counts.get("Deserta", 0),    f"{counts.get('Deserta', 0)/total*100:.1f}%")
 
             fig_bar = px.bar(
                 x=counts.index, y=counts.values,
                 color=counts.index,
-                color_discrete_map={"Aprueba": "#2ecc71", "No aprueba": "#e74c3c"},
+                color_discrete_map={"No deserta": "#2ecc71", "Deserta": "#e74c3c"},
                 labels={"x": "Estado", "y": "Estudiantes"},
                 title="Clasificación de Estudiantes",
             )
             fig_bar.update_layout(showlegend=False, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_bar, use_container_width=True, key="pred_bar")
 
-            st.markdown("#### 📊 Distribución de P(aprueba)")
-            st.caption("Derecha del umbral → Aprueba. Izquierda → No aprueba.")
-            fig_hist = px.histogram(df_results, x="p_aprueba", nbins=40,
-                                    color_discrete_sequence=["#667eea"], labels={"p_aprueba": "P(aprueba)"})
+            st.markdown("#### 📊 Distribución de P(deserta)")
+            st.caption("Derecha del umbral → Deserta (en riesgo). Izquierda → No deserta.")
+            fig_hist = px.histogram(df_results, x="p_desercion", nbins=40,
+                                    color_discrete_sequence=["#667eea"], labels={"p_desercion": "P(deserta)"})
             fig_hist.add_vline(x=threshold, line_dash="dash", line_color="red",
                                annotation_text=f"Umbral {threshold:.2f}", annotation_position="top right")
             fig_hist.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", showlegend=False)
             st.plotly_chart(fig_hist, use_container_width=True, key="pred_hist")
 
             st.markdown("#### 📋 Detalle por estudiante")
-            st.caption("p_aprueba: 🟩 ≥ 0.7 alta prob. de aprobar · 🟨 0.5–0.7 moderado · 🟥 < 0.5 riesgo de deserción")
+            st.caption("p_desercion: 🟥 ≥ 0.7 alto riesgo de deserción · 🟨 0.5–0.7 riesgo moderado · 🟩 < 0.5 bajo riesgo")
 
             def color_res(val):
-                return "color:#27ae60;font-weight:bold" if val == "Aprueba" else "color:#e74c3c;font-weight:bold"
+                return "color:#27ae60;font-weight:bold" if val == "No deserta" else "color:#e74c3c;font-weight:bold"
+
             def color_p(val):
-                if val >= 0.7:   return "background-color:#e8f8e8"
-                elif val >= 0.5: return "background-color:#fff3cd"
-                return "background-color:#fde8e8"
+                if val >= 0.7:   return "background-color:#fde8e8"   # rojo  = alto riesgo deserción
+                elif val >= 0.5: return "background-color:#fff3cd"   # amarillo = riesgo moderado
+                return "background-color:#e8f8e8"                    # verde = bajo riesgo
 
             st.dataframe(
-                df_results.style.applymap(color_res, subset=["resultado_modelo"]).applymap(color_p, subset=["p_aprueba"]),
+                df_results.style.applymap(color_res, subset=["resultado_modelo"]).applymap(color_p, subset=["p_desercion"]),
                 use_container_width=True, height=420,
             )
 
@@ -349,7 +351,7 @@ with tab_pred:
             pmean = float(np.nanmean(probs));  p25 = float(np.nanpercentile(probs, 25))
             p50   = float(np.nanpercentile(probs, 50)); p75 = float(np.nanpercentile(probs, 75))
             pstd  = float(np.nanstd(probs));   pmin = float(np.nanmin(probs)); pmax = float(np.nanmax(probs))
-            st.metric("Promedio P(aprueba)", f"{pmean:.3f}")
+            st.metric("Promedio P(deserta)", f"{pmean:.3f}")
             st.metric("Percentil 25",  f"{p25:.3f}")
             st.metric("Mediana",       f"{p50:.3f}")
             st.metric("Percentil 75",  f"{p75:.3f}")
@@ -357,12 +359,13 @@ with tab_pred:
             st.metric("Mínimo",        f"{pmin:.3f}")
             st.metric("Máximo",        f"{pmax:.3f}")
             st.markdown("---")
+            # Lógica correcta: mediana alta = mayor riesgo de deserción
             if p50 >= 0.7:
-                st.success("🟢 **Grupo de bajo riesgo**")
+                st.error("🔴 **Alto riesgo de deserción**")
             elif p50 >= 0.4:
                 st.warning("🟡 **Riesgo moderado**")
             else:
-                st.error("🔴 **Alto riesgo de deserción**")
+                st.success("🟢 **Grupo de bajo riesgo**")
 
         st.markdown("---")
         _, cb, _ = st.columns([1, 2, 1])
@@ -385,7 +388,6 @@ with tab_pred:
 # ═════════════════════════════════════════════════════════════════
 with tab_stats:
 
-    # ── Sección A: Arquitectura ───────────────────────────────────
     st.markdown("""
     <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
                 padding:1rem;border-radius:10px;margin-bottom:1.5rem;">
@@ -431,6 +433,3 @@ with tab_stats:
         st.error("❌ Modelo no cargado.")
 
     st.markdown("---")
-
-
-           

@@ -211,6 +211,15 @@ with st.sidebar:
         help="P(deserta) ≥ umbral → Deserta (riesgo) | P(deserta) < umbral → No deserta",
     )
 
+    # Mostrar umbral activo claramente
+    st.markdown(f"""
+    <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;
+                padding:0.6rem;text-align:center;margin-top:0.5rem;">
+        <strong>Umbral activo: {threshold:.2f}</strong><br>
+        <small>P ≥ {threshold:.2f} → 🚨 Deserta<br>P &lt; {threshold:.2f} → ✅ No deserta</small>
+    </div>
+    """, unsafe_allow_html=True)
+
 # ─────────────────────────────────────────────────────────────────
 #  TABS
 # ─────────────────────────────────────────────────────────────────
@@ -240,6 +249,7 @@ with tab_pred:
         type=["csv", "xlsx"], key="file_uploader_pred",
     )
 
+    # ── Procesar archivo nuevo ────────────────────────────────────
     if uploaded_file is not None:
         if model is None or scaler is None:
             st.error("❌ Falta el modelo o el scaler.")
@@ -280,7 +290,20 @@ with tab_pred:
 
         ids = codigos if (codigos and len(codigos) == len(df_cleaned)) else [f"EST_{i+1:04d}" for i in range(len(df_cleaned))]
 
-        # ── CORRECCIÓN CLAVE: 1 = deserta, 0 = no deserta ──────────
+        # ── GUARDAR en session_state para reusar al cambiar el umbral ──
+        st.session_state["probs"] = probs
+        st.session_state["ids"]   = ids
+
+    # ── Mostrar resultados si hay probabilidades calculadas ───────
+    # Esto se ejecuta tanto cuando se sube el archivo como cuando
+    # el usuario solo mueve el slider (sin re-subir el archivo).
+    if "probs" in st.session_state:
+
+        # Siempre recalcular con el threshold ACTUAL del slider
+        probs     = st.session_state["probs"]
+        ids       = st.session_state["ids"]
+
+        # CORRECCIÓN CLAVE: recalcular resultado_modelo con el umbral vigente
         df_results = pd.DataFrame({
             "identificador":    ids,
             "p_desercion":      np.round(probs, 4),
@@ -294,11 +317,13 @@ with tab_pred:
             index=False,
         )
 
-        # Dashboard
-        st.markdown("""
+        # ── Dashboard ─────────────────────────────────────────────
+        st.markdown(f"""
         <div style="background:linear-gradient(135deg,#fa709a 0%,#fee140 100%);
                     padding:1rem;border-radius:10px;margin:1.5rem 0 1rem 0;">
-            <h2 style="color:white;text-align:center;margin:0;">📊 Resultados</h2>
+            <h2 style="color:white;text-align:center;margin:0;">
+                📊 Resultados &nbsp;·&nbsp; Umbral activo: {threshold:.2f}
+            </h2>
         </div>
         """, unsafe_allow_html=True)
 
@@ -316,7 +341,7 @@ with tab_pred:
                 color=counts.index,
                 color_discrete_map={"No deserta": "#2ecc71", "Deserta": "#e74c3c"},
                 labels={"x": "Estado", "y": "Estudiantes"},
-                title="Clasificación de Estudiantes",
+                title=f"Clasificación de Estudiantes (umbral={threshold:.2f})",
             )
             fig_bar.update_layout(showlegend=False, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_bar, use_container_width=True, key="pred_bar")
@@ -331,18 +356,25 @@ with tab_pred:
             st.plotly_chart(fig_hist, use_container_width=True, key="pred_hist")
 
             st.markdown("#### 📋 Detalle por estudiante")
-            st.caption("p_desercion: 🟥 ≥ 0.7 alto riesgo de deserción · 🟨 0.5–0.7 riesgo moderado · 🟩 < 0.5 bajo riesgo")
+            st.caption(f"p_desercion con umbral={threshold:.2f}: 🚨 ≥ {threshold:.2f} Deserta · ✅ < {threshold:.2f} No deserta")
 
             def color_res(val):
                 return "color:#27ae60;font-weight:bold" if val == "No deserta" else "color:#e74c3c;font-weight:bold"
 
             def color_p(val):
-                if val >= 0.7:   return "background-color:#fde8e8"   # rojo  = alto riesgo deserción
-                elif val >= 0.5: return "background-color:#fff3cd"   # amarillo = riesgo moderado
-                return "background-color:#e8f8e8"                    # verde = bajo riesgo
+                if val >= threshold:
+                    # Gradiente de riesgo relativo al umbral
+                    diff = val - threshold
+                    if diff >= 0.15:
+                        return "background-color:#fde8e8"   # rojo  = alto riesgo
+                    else:
+                        return "background-color:#fff3cd"   # amarillo = riesgo moderado/justo al umbral
+                return "background-color:#e8f8e8"           # verde = bajo riesgo (bajo el umbral)
 
             st.dataframe(
-                df_results.style.applymap(color_res, subset=["resultado_modelo"]).applymap(color_p, subset=["p_desercion"]),
+                df_results.style
+                    .applymap(color_res, subset=["resultado_modelo"])
+                    .applymap(color_p,   subset=["p_desercion"]),
                 use_container_width=True, height=420,
             )
 
@@ -359,23 +391,25 @@ with tab_pred:
             st.metric("Mínimo",        f"{pmin:.3f}")
             st.metric("Máximo",        f"{pmax:.3f}")
             st.markdown("---")
-            # Lógica correcta: mediana alta = mayor riesgo de deserción
-            if p50 >= 0.7:
-                st.error("🔴 **Alto riesgo de deserción**")
-            elif p50 >= 0.4:
-                st.warning("🟡 **Riesgo moderado**")
+
+            st.markdown(f"**Umbral activo:** `{threshold:.2f}`")
+            pct_deserta = counts.get("Deserta", 0) / total * 100
+            if pct_deserta >= 60:
+                st.error(f"🔴 **Alto riesgo grupal** ({pct_deserta:.1f}% desertan)")
+            elif pct_deserta >= 30:
+                st.warning(f"🟡 **Riesgo moderado** ({pct_deserta:.1f}% desertan)")
             else:
-                st.success("🟢 **Grupo de bajo riesgo**")
+                st.success(f"🟢 **Grupo de bajo riesgo** ({pct_deserta:.1f}% desertan)")
 
         st.markdown("---")
         _, cb, _ = st.columns([1, 2, 1])
         with cb:
             st.download_button("💾 Descargar Resultados (CSV)",
                                df_results.to_csv(index=False).encode("utf-8"),
-                               file_name="resultados_prediccion.csv", mime="text/csv",
+                               file_name=f"resultados_umbral{threshold:.2f}.csv", mime="text/csv",
                                key="btn_dl_pred", use_container_width=True)
 
-    else:
+    elif uploaded_file is None:
         st.markdown("""
         <div style="text-align:center;padding:3rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
                     border-radius:15px;margin:2rem 0;">

@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
+import csv
+import io
 from joblib import load as joblib_load
 from tensorflow.keras.models import load_model
 from sklearn.metrics import (
@@ -21,9 +23,58 @@ st.set_page_config(
 MODEL_PATH  = "modelo_desercion_nn.keras"
 SCALER_PATH = "scaler.joblib"
 
-# ─────────────────────────────────────────────────────────────────
-#  CARGAR MODELO Y SCALER
-# ─────────────────────────────────────────────────────────────────
+TEMPLATE_COLUMNS = [
+    "CODESTUDIANTE", "ESTP_FECHAINGRESO", "CREDITOSAPROBADOS",
+    "UBICACION_SEMESTRAL", "PROMEDIO_GENERAL", "PROGRAMA", "JORNADA",
+    "GENERO", "FECHA_NACIMIENTO", "CIUDADRESIDENCIA", "ESTRATO",
+    "TIENE_SISBEN", "INFE_VIVECONFAMILIA", "INFE_SITUACIONPADRES",
+    "INFE_NUMEROFAMILIARES", "INFE_NUMEROHERMANOS",
+    "INFE_POSICIONENHERMANOS", "INFE_NUMMIEMBROSTRABAJA",
+    "CODIGOCIUDADR",
+]
+
+PROGRAMAS_VALIDOS = [
+    "INGENIERIA DE SISTEMAS",
+    "TECNOLOGIA EN DESARROLLO DE SISTEMAS INFORMATICOS",
+]
+
+NUMERIC_RANGES = {
+    "CREDITOSAPROBADOS": (0, None),
+    "UBICACION_SEMESTRAL": (1, None),
+    "PROMEDIO_GENERAL": (0, 5),
+    "ESTRATO": (1, 6),
+    "INFE_NUMEROFAMILIARES": (0, None),
+    "INFE_NUMEROHERMANOS": (0, None),
+    "INFE_POSICIONENHERMANOS": (0, None),
+    "INFE_NUMMIEMBROSTRABAJA": (0, None),
+}
+
+ALLOWED_SETS = {
+    "TIENE_SISBEN": {0, 1},
+}
+
+
+def parse_datetime_series(series):
+    text = series.astype(str).str.strip()
+    text = text.str.replace("\u202f", " ", regex=False)
+    text = text.str.replace("\xa0", " ", regex=False)
+    text = text.str.replace(r"(?i)\ba\.?\s*m\.?\b", "AM", regex=True)
+    text = text.str.replace(r"(?i)\bp\.?\s*m\.?\b", "PM", regex=True)
+    text = text.str.replace(r"(?i)\ba\.\s*m\.?", "AM", regex=True)
+    text = text.str.replace(r"(?i)\bp\.\s*m\.?", "PM", regex=True)
+    parsed = pd.to_datetime(text, errors="coerce", dayfirst=True)
+    fallback_mask = parsed.isna()
+    if fallback_mask.any():
+        parsed.loc[fallback_mask] = pd.to_datetime(text.loc[fallback_mask], errors="coerce", dayfirst=False)
+    return parsed
+
+
+def parse_decimal_series(series):
+    text = series.astype(str).str.strip()
+    text = text.str.replace(" ", "", regex=False)
+    text = text.str.replace(",", ".", regex=False)
+    return pd.to_numeric(text, errors="coerce")
+
 @st.cache_resource
 def load_artifacts():
     mdl, scl = None, None
@@ -43,27 +94,110 @@ def load_artifacts():
 
 model, scaler = load_artifacts()
 
-# ─────────────────────────────────────────────────────────────────
-#  PLANTILLAS
-# ─────────────────────────────────────────────────────────────────
 def make_template_df():
-    return pd.DataFrame(columns=[
-        "CODESTUDIANTE", "ESTP_FECHAINGRESO", "CREDITOSAPROBADOS",
-        "UBICACION_SEMESTRAL", "PROMEDIO_GENERAL", "PROGRAMA", "JORNADA",
-        "GENERO", "FECHA_NACIMIENTO", "CIUDADRESIDENCIA", "ESTRATO",
-        "TIENE_SISBEN", "INFE_VIVECONFAMILIA", "INFE_SITUACIONPADRES",
-        "INFE_NUMEROFAMILIARES", "INFE_NUMEROHERMANOS",
-        "INFE_POSICIONENHERMANOS", "INFE_NUMMIEMBROSTRABAJA",
-    ])
+    return pd.DataFrame(columns=TEMPLATE_COLUMNS)
 
 def make_example_df():
     if os.path.exists("test50.csv"):
         return pd.read_csv("test50.csv")
     return make_template_df()
 
-# ─────────────────────────────────────────────────────────────────
-#  LIMPIEZA
-# ─────────────────────────────────────────────────────────────────
+def read_uploaded_file(uploaded_file):
+    if uploaded_file.name.endswith(".csv"):
+        content = uploaded_file.getvalue()
+        try:
+            text = content.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            text = content.decode("latin-1")
+        sample = text[:2048]
+        delimiter = ","
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=[",", ";", "\t", "|"])
+            delimiter = dialect.delimiter
+        except csv.Error:
+            delimiter = ","
+        df = pd.read_csv(io.StringIO(text), sep=delimiter, engine="python")
+        df.columns = df.columns.astype(str).str.strip()
+        return df, delimiter
+    df = pd.read_excel(uploaded_file)
+    df.columns = df.columns.astype(str).str.strip()
+    return df, None
+
+
+def validate_schema(df_raw):
+    errors = []
+    cols = list(df_raw.columns)
+    missing = [c for c in TEMPLATE_COLUMNS if c not in cols]
+    for c in missing:
+        errors.append({
+            "Fila": 1,
+            "Columna": c,
+            "Valor": "",
+            "Detalle": "Columna requerida faltante.",
+        })
+    return errors
+
+
+def collect_value_errors(df_raw):
+    errors = []
+
+    def add_error(idx, col, val, detalle):
+        errors.append({
+            "Fila": int(idx) + 2,
+            "Columna": col,
+            "Valor": "" if pd.isna(val) else str(val),
+            "Detalle": detalle,
+        })
+
+    if "CODESTUDIANTE" in df_raw.columns:
+        mask = df_raw["CODESTUDIANTE"].isna() | (df_raw["CODESTUDIANTE"].astype(str).str.strip() == "")
+        for idx in df_raw[mask].index:
+            add_error(idx, "CODESTUDIANTE", df_raw.at[idx, "CODESTUDIANTE"], "Valor requerido.")
+
+    for col in ["ESTP_FECHAINGRESO", "FECHA_NACIMIENTO"]:
+        if col in df_raw.columns:
+            parsed = parse_datetime_series(df_raw[col])
+            mask = parsed.isna()
+            for idx in df_raw[mask].index:
+                add_error(idx, col, df_raw.at[idx, col], "Fecha invalida o vacia.")
+
+    if "PROGRAMA" in df_raw.columns:
+        valid_set = {p.upper() for p in PROGRAMAS_VALIDOS}
+        normalized = df_raw["PROGRAMA"].astype(str).str.strip().str.upper()
+        mask = ~normalized.isin(valid_set)
+        for idx in df_raw[mask].index:
+            add_error(idx, "PROGRAMA", df_raw.at[idx, "PROGRAMA"], "Programa no valido.")
+
+    for col, (min_val, max_val) in NUMERIC_RANGES.items():
+        if col in df_raw.columns:
+            numeric = parse_decimal_series(df_raw[col]) if col == "PROMEDIO_GENERAL" else pd.to_numeric(df_raw[col], errors="coerce")
+            for idx in df_raw[numeric.isna()].index:
+                add_error(idx, col, df_raw.at[idx, col], "Debe ser numerico.")
+            if min_val is not None:
+                mask = numeric < min_val
+                for idx in df_raw[mask.fillna(False)].index:
+                    add_error(idx, col, df_raw.at[idx, col], f"Debe ser >= {min_val}.")
+            if max_val is not None:
+                mask = numeric > max_val
+                for idx in df_raw[mask.fillna(False)].index:
+                    add_error(idx, col, df_raw.at[idx, col], f"Debe ser <= {max_val}.")
+
+    for col, allowed in ALLOWED_SETS.items():
+        if col in df_raw.columns:
+            numeric = pd.to_numeric(df_raw[col], errors="coerce")
+            for idx in df_raw[numeric.isna()].index:
+                add_error(idx, col, df_raw.at[idx, col], f"Debe ser numerico ({sorted(allowed)}).")
+            mask = ~numeric.isin(allowed)
+            for idx in df_raw[mask.fillna(False)].index:
+                add_error(idx, col, df_raw.at[idx, col], f"Valor permitido: {sorted(allowed)}.")
+
+    return errors
+
+
+def invalid_row_indices_from_errors(errors):
+    return sorted({int(error["Fila"]) - 2 for error in errors if int(error.get("Fila", 0)) >= 2})
+
+
 def clean_data(df_raw, keep_situacion=False):
     df = df_raw.copy()
     codigos = df["CODESTUDIANTE"].astype(str).tolist() if "CODESTUDIANTE" in df.columns else None
@@ -79,26 +213,23 @@ def clean_data(df_raw, keep_situacion=False):
     df = df.drop(columns=[c for c in drop_cols if c in df.columns])
 
     if "ESTP_FECHAINGRESO" in df.columns:
-        df["ESTP_FECHAINGRESO"] = (
-            df["ESTP_FECHAINGRESO"].astype(str)
-            .str.extract(r"(\d{1,2}/\d{1,2}/\d{4}\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)?)")[0]
-        )
-    df["ESTP_FECHAINGRESO"] = pd.to_datetime(df["ESTP_FECHAINGRESO"], errors="coerce", dayfirst=True)
-    df["FECHA_NACIMIENTO"]  = pd.to_datetime(df["FECHA_NACIMIENTO"],  errors="coerce", dayfirst=True)
-    df["EDAD_INGRESO"] = ((df["ESTP_FECHAINGRESO"] - df["FECHA_NACIMIENTO"]).dt.days / 365.25).round().astype("Int64")
-    df["ANIO_INGRESO"] = df["ESTP_FECHAINGRESO"].dt.year
-    df["MES_INGRESO"]  = df["ESTP_FECHAINGRESO"].dt.month
-    df = df.drop(columns=["ESTP_FECHAINGRESO", "FECHA_NACIMIENTO"])
+        df["ESTP_FECHAINGRESO"] = parse_datetime_series(df["ESTP_FECHAINGRESO"])
+    if "FECHA_NACIMIENTO" in df.columns:
+        df["FECHA_NACIMIENTO"] = parse_datetime_series(df["FECHA_NACIMIENTO"])
+    if "ESTP_FECHAINGRESO" in df.columns and "FECHA_NACIMIENTO" in df.columns:
+        df["EDAD_INGRESO"] = ((df["ESTP_FECHAINGRESO"] - df["FECHA_NACIMIENTO"]).dt.days / 365.25).round().astype("Int64")
+        df["ANIO_INGRESO"] = df["ESTP_FECHAINGRESO"].dt.year
+        df["MES_INGRESO"]  = df["ESTP_FECHAINGRESO"].dt.month
+        df = df.drop(columns=["ESTP_FECHAINGRESO", "FECHA_NACIMIENTO"])
+
+    if "PROMEDIO_GENERAL" in df.columns:
+        df["PROMEDIO_GENERAL"] = parse_decimal_series(df["PROMEDIO_GENERAL"])
 
     df["ESTRATO"] = pd.to_numeric(df["ESTRATO"], errors="coerce")
     df.loc[(df["ESTRATO"] < 1) | (df["ESTRATO"] > 6), "ESTRATO"] = pd.NA
 
-    programas_validos = [
-        "INGENIERIA DE SISTEMAS",
-        "TECNOLOGIA EN DESARROLLO DE SISTEMAS INFORMATICOS",
-    ]
     if "PROGRAMA" in df.columns:
-        mask = df["PROGRAMA"].isin(programas_validos)
+        mask = df["PROGRAMA"].isin(PROGRAMAS_VALIDOS)
         if situacion is not None:
             situacion = situacion[mask.values]
         if codigos is not None:
@@ -144,9 +275,6 @@ def prepare_for_model(df_cleaned, scaler):
     return scaler.transform(X)
 
 
-# ─────────────────────────────────────────────────────────────────
-#  HEADER
-# ─────────────────────────────────────────────────────────────────
 st.markdown("""
 <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
             padding:2rem;border-radius:15px;margin-bottom:2rem;
@@ -168,9 +296,6 @@ dump(scaler, 'scaler.joblib')
 ```
 Luego copia `scaler.joblib` junto a `app.py`.""")
 
-# ─────────────────────────────────────────────────────────────────
-#  SIDEBAR
-# ─────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("""
     <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
@@ -211,7 +336,6 @@ with st.sidebar:
         help="P(deserta) ≥ umbral → Deserta (riesgo) | P(deserta) < umbral → No deserta",
     )
 
-    # Mostrar umbral activo claramente
     st.markdown(f"""
     <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;
                 padding:0.6rem;text-align:center;margin-top:0.5rem;">
@@ -220,14 +344,8 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────────────────────────
-#  TABS
-# ─────────────────────────────────────────────────────────────────
 tab_pred, tab_stats = st.tabs(["🎯 Predicción", "📈 Estadísticas del Modelo"])
 
-# ═════════════════════════════════════════════════════════════════
-#  TAB 1 — PREDICCIÓN
-# ═════════════════════════════════════════════════════════════════
 with tab_pred:
 
     st.markdown("""
@@ -249,22 +367,46 @@ with tab_pred:
         type=["csv", "xlsx"], key="file_uploader_pred",
     )
 
-    # ── Procesar archivo nuevo ────────────────────────────────────
     if uploaded_file is not None:
         if model is None or scaler is None:
             st.error("❌ Falta el modelo o el scaler.")
             st.stop()
 
-        df_raw = pd.read_csv(uploaded_file) if uploaded_file.name.endswith(".csv") else pd.read_excel(uploaded_file)
+        try:
+            df_raw, delimiter = read_uploaded_file(uploaded_file)
+        except Exception as e:
+            st.error(f"❌ No se pudo leer el archivo: {e}")
+            st.stop()
+
+        schema_errors = validate_schema(df_raw)
+        if schema_errors:
+            st.error("❌ El archivo no cumple con la estructura requerida.")
+            st.dataframe(pd.DataFrame(schema_errors), use_container_width=True, hide_index=True)
+            st.stop()
+
+        value_errors = collect_value_errors(df_raw)
+        invalid_indices = invalid_row_indices_from_errors(value_errors)
+        valid_mask = ~df_raw.index.isin(invalid_indices)
+        df_valid_raw = df_raw.loc[valid_mask].copy()
+
+        if value_errors:
+            st.warning(f"⚠️ Se detectaron {len(invalid_indices)} registros con errores. Solo se procesarán los válidos.")
+            st.dataframe(pd.DataFrame(value_errors), use_container_width=True, hide_index=True)
 
         with st.sidebar:
             st.markdown("---")
             c1, c2 = st.columns(2)
             c1.metric("Registros", len(df_raw))
-            c2.metric("Columnas", len(df_raw.columns))
+            c2.metric("Válidos", len(df_valid_raw))
+            if delimiter:
+                st.caption(f"Delimitador CSV detectado: `{delimiter}`")
+
+        if len(df_valid_raw) == 0:
+            st.error("❌ No quedaron registros válidos para procesar.")
+            st.stop()
 
         with st.spinner("🧹 Limpiando datos..."):
-            df_cleaned, codigos, _ = clean_data(df_raw, keep_situacion=False)
+            df_cleaned, codigos, _ = clean_data(df_valid_raw, keep_situacion=False)
 
         if len(df_cleaned) == 0:
             st.error("❌ No quedaron registros. Verifica los programas en el archivo.")
@@ -290,20 +432,26 @@ with tab_pred:
 
         ids = codigos if (codigos and len(codigos) == len(df_cleaned)) else [f"EST_{i+1:04d}" for i in range(len(df_cleaned))]
 
-        # ── GUARDAR en session_state para reusar al cambiar el umbral ──
         st.session_state["probs"] = probs
         st.session_state["ids"]   = ids
+        st.session_state["value_errors"] = value_errors
+        st.session_state["invalid_count"] = len(invalid_indices)
+        st.session_state["valid_count"] = len(df_cleaned)
+        st.session_state["total_count"] = len(df_raw)
 
-    # ── Mostrar resultados si hay probabilidades calculadas ───────
-    # Esto se ejecuta tanto cuando se sube el archivo como cuando
-    # el usuario solo mueve el slider (sin re-subir el archivo).
     if "probs" in st.session_state:
 
-        # Siempre recalcular con el threshold ACTUAL del slider
         probs     = st.session_state["probs"]
         ids       = st.session_state["ids"]
+        invalid_count = st.session_state.get("invalid_count", 0)
+        total_count   = st.session_state.get("total_count", len(ids))
+        valid_count   = st.session_state.get("valid_count", len(ids))
+        value_errors  = st.session_state.get("value_errors", [])
 
-        # CORRECCIÓN CLAVE: recalcular resultado_modelo con el umbral vigente
+        if invalid_count > 0:
+            st.info(f"Se procesaron {valid_count} registros válidos de {total_count}. {invalid_count} quedaron fuera por errores de formato o contenido.")
+            st.dataframe(pd.DataFrame(value_errors), use_container_width=True, hide_index=True)
+
         df_results = pd.DataFrame({
             "identificador":    ids,
             "p_desercion":      np.round(probs, 4),
@@ -317,7 +465,6 @@ with tab_pred:
             index=False,
         )
 
-        # ── Dashboard ─────────────────────────────────────────────
         st.markdown(f"""
         <div style="background:linear-gradient(135deg,#fa709a 0%,#fee140 100%);
                     padding:1rem;border-radius:10px;margin:1.5rem 0 1rem 0;">
@@ -363,18 +510,17 @@ with tab_pred:
 
             def color_p(val):
                 if val >= threshold:
-                    # Gradiente de riesgo relativo al umbral
                     diff = val - threshold
                     if diff >= 0.15:
-                        return "background-color:#fde8e8"   # rojo  = alto riesgo
+                        return "background-color:#fde8e8"
                     else:
-                        return "background-color:#fff3cd"   # amarillo = riesgo moderado/justo al umbral
-                return "background-color:#e8f8e8"           # verde = bajo riesgo (bajo el umbral)
+                        return "background-color:#fff3cd"
+                return "background-color:#e8f8e8"
 
             st.dataframe(
                 df_results.style
-                    .applymap(color_res, subset=["resultado_modelo"])
-                    .applymap(color_p,   subset=["p_desercion"]),
+                    .map(color_res, subset=["resultado_modelo"])
+                    .map(color_p,   subset=["p_desercion"]),
                 use_container_width=True, height=420,
             )
 
@@ -417,9 +563,6 @@ with tab_pred:
         </div>
         """, unsafe_allow_html=True)
 
-# ═════════════════════════════════════════════════════════════════
-#  TAB 2 — ESTADÍSTICAS DEL MODELO
-# ═════════════════════════════════════════════════════════════════
 with tab_stats:
 
     st.markdown("""

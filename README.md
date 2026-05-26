@@ -1,6 +1,8 @@
-# Prediccion de Desercion Estudiantil
+# Predicción de Deserción Estudiantil
 
-Proyecto Streamlit para predecir desercion con un modelo de red neuronal.
+Proyecto Streamlit para predecir la deserción estudiantil usando un modelo de
+red neuronal entrenado. La aplicación valida la plantilla de entrada, realiza la
+predicción y permite descargar los resultados.
 
 ## Clonar el repositorio
 
@@ -22,10 +24,10 @@ source .venv/bin/activate
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\Activate.ps1
+.venv\\Scripts\\Activate.ps1
 ```
 
-## Instalar librerias
+## Instalar dependencias
 
 ```bash
 pip install streamlit pandas numpy joblib tensorflow scikit-learn plotly openpyxl
@@ -33,15 +35,16 @@ pip install streamlit pandas numpy joblib tensorflow scikit-learn plotly openpyx
 
 ## Entrenar el modelo (opcional)
 
-Entrena y genera los archivos del modelo y el scaler.
+Si quieres volver a entrenar el modelo y regenerar los artefactos, ejecuta:
 
 ```bash
 python train.py
 ```
 
-Se crean los archivos:
-- `modelo_desercion_nn.keras`
-- `scaler.joblib`
+Al finalizar se generan (si corresponde):
+
+- `modelo_desercion_nn.keras` — modelo entrenado
+- `scaler.joblib` — scaler con las features esperadas por el modelo
 
 ## Ejecutar la interfaz
 
@@ -49,7 +52,9 @@ Se crean los archivos:
 streamlit run app.py
 ```
 
-La aplicacion abre en el navegador. Carga un archivo CSV o Excel usando la plantilla y descarga los resultados.
+La aplicación se abrirá en el navegador. Carga un archivo CSV o Excel usando la
+plantilla y, si todo es válido, podrás descargar los resultados con las
+predicciones.
 
 ## Estructura del proyecto
 
@@ -57,27 +62,43 @@ La aplicacion abre en el navegador. Carga un archivo CSV o Excel usando la plant
 Tesisfiles/
 ├─ app.py
 ├─ train.py
+├─ Limpieza de datos.py
 ├─ modelo_desercion_nn.keras
 ├─ scaler.joblib
 ├─ test50.csv
-├─ Base de datos estudiantes.xlsx
-├─ Base_de_datos_estudiantes_ready_step4_20260215_014516.xlsx
-└─ archivos_procesados/
-   └─ resultados/
+├─ README.md
+├─ archivos_procesados/
+│  └─ resultados/
+└─ Documents/
+   ├─ 2017-2019/
+   │  ├─ "Con situacion 2017-2019.xlsx - Situacion.csv"
+   │  └─ "Sin situacion 2017-2019.xlsx - Sheet1.csv"
+   ├─ 2020-2021/
+   │  ├─ "Con situacion 2020-2021.xlsx - Situacion.csv"
+   │  └─ "Sin situacion 2020-2021.xlsx - Sheet1.csv"
+   └─ 2022-2024/
+      ├─ "Con situacion 2022-2024.xlsx - Situacion.csv"
+      └─ "Sin situacion 2022-2025.xlsx - Sheet1.csv"
 ```
 
-## Descripcion de archivos
+> Nota: la estructura refleja los archivos y carpetas presentes en el
+> repositorio. Ajusta las rutas si mueves o renombras archivos.
 
-- `app.py`: interfaz Streamlit, validaciones, prediccion y exportacion de resultados.
-- `train.py`: entrenamiento del modelo, evaluacion y guardado de artefactos.
+## Descripción de archivos principales
+
+- `app.py`: interfaz Streamlit, validaciones, predicción y exportación de resultados.
+- `train.py`: script de entrenamiento del modelo y guardado de artefactos.
+- `Limpieza de datos.py`: script de limpieza / preparación de datos.
 - `test50.csv`: ejemplo con 50 estudiantes para pruebas.
-- `modelo_desercion_nn.keras`: modelo entrenado.
-- `scaler.joblib`: scaler con las features esperadas por el modelo.
-- `archivos_procesados/resultados/`: resultados generados al predecir.
+- `modelo_desercion_nn.keras`: modelo entrenado (si existe).
+- `scaler.joblib`: scaler con las features esperadas por el modelo (si existe).
+- `archivos_procesados/resultados/`: carpeta con CSVs generados tras la predicción.
 
 ## Plantilla y validaciones
 
-La interfaz exige la estructura exacta de la plantilla (mismos encabezados). Si falta una columna, sobra una columna o hay datos invalidos, la app muestra una tabla de errores con fila y columna.
+La aplicación exige la estructura exacta de la plantilla (mismos encabezados).
+Si falta una columna, sobra una columna o hay datos inválidos, la app mostrará
+una tabla de errores indicando fila y columna.
 
 Columnas requeridas:
 
@@ -89,15 +110,21 @@ INFE_NUMEROFAMILIARES, INFE_NUMEROHERMANOS, INFE_POSICIONENHERMANOS,
 INFE_NUMMIEMBROSTRABAJA
 ```
 
-El archivo para prediccion no debe incluir la columna `SITUACION`.
+El archivo para predicción no debe incluir la columna `SITUACION`.
 
-## Delimitacion de CSV
+## Delimitador para CSV
 
-Si subes CSV, la app detecta el delimitador (`,`, `;`, tabulacion o `|`). Mantener un delimitador consistente por archivo evita errores de lectura.
+Si subes un CSV, la app detecta el delimitador (`,`, `;`, tabulación o `|`).
+Mantén un delimitador consistente por archivo para evitar errores de lectura.
 
 ## Flujo recomendado
 
-1) Descarga la plantilla desde la interfaz.
-2) Llena el archivo con los datos requeridos.
-3) Sube el archivo y revisa la tabla de errores si aparece.
-4) Descarga el CSV de resultados.
+1. Descarga la plantilla desde la interfaz.
+2. Completa el archivo con los datos requeridos.
+3. Sube el archivo y revisa la tabla de errores si aparece.
+4. Si todo es válido, descarga el CSV con los resultados.
+
+---
+
+Si quieres, puedo además generar una plantilla CSV con los encabezados requeridos
+o crear un `requirements.txt` para gestionar dependencias. ¿Lo hago?

@@ -450,7 +450,8 @@ with tab_pred:
 
         if invalid_count > 0:
             st.info(f"Se procesaron {valid_count} registros válidos de {total_count}. {invalid_count} quedaron fuera por errores de formato o contenido.")
-            st.dataframe(pd.DataFrame(value_errors), use_container_width=True, hide_index=True)
+            # La tabla de errores ya se muestra en la etapa de validación inicial;
+            # aquí solo mostramos el resumen para evitar duplicados.
 
         df_results = pd.DataFrame({
             "identificador":    ids,

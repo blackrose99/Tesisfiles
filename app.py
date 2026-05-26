@@ -15,7 +15,7 @@ import plotly.graph_objects as go
 from datetime import datetime
 
 st.set_page_config(
-    page_title="🎓 Predicción de Deserción Estudiantil",
+    page_title="Predicción de Deserción Estudiantil",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -32,6 +32,21 @@ TEMPLATE_COLUMNS = [
     "INFE_POSICIONENHERMANOS", "INFE_NUMMIEMBROSTRABAJA",
     "CODIGOCIUDADR",
 ]
+
+# SVG icon templates (minimal, inline-friendly)
+SVG_ICONS = {
+    "logo": '<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l10-4 10 4-10 4L2 7z"/><path d="M12 11v8"/></svg>',
+    "files": '<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2z"/></svg>',
+    "download": '<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+    "config": '<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82L4.31 4.1A2 2 0 0 1 7.14 1.27l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09c0 .62.38 1.17 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06A2 2 0 0 1 19.69 4.1l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.44.28.83.63 1.15 1.05z"/></svg>',
+    "save": '<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>',
+}
+
+def svg_html(key, size=20, color="#ffffff"):
+    tpl = SVG_ICONS.get(key, "")
+    if not tpl:
+        return ""
+    return tpl.format(size=size, color=color)
 
 PROGRAMAS_VALIDOS = [
     "INGENIERIA DE SISTEMAS",
@@ -275,12 +290,13 @@ def prepare_for_model(df_cleaned, scaler):
     return scaler.transform(X)
 
 
-st.markdown("""
+st.markdown(f"""
 <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
             padding:2rem;border-radius:15px;margin-bottom:2rem;
             box-shadow:0 4px 6px rgba(0,0,0,0.1);">
-    <h1 style="color:white;text-align:center;margin:0;font-size:3rem;">
-        🎓 Predicción de Deserción Estudiantil
+    <h1 style="color:white;text-align:center;margin:0;font-size:3rem;display:flex;align-items:center;justify-content:center;gap:12px;">
+        {svg_html('logo', 40, '#ffffff')}
+        <span>Predicción de Deserción Estudiantil</span>
     </h1>
     <p style="color:#f0f0f0;text-align:center;font-size:1.2rem;margin-top:0.5rem;">
         Sistema Inteligente de Análisis Predictivo
@@ -297,35 +313,35 @@ dump(scaler, 'scaler.joblib')
 Luego copia `scaler.joblib` junto a `app.py`.""")
 
 with st.sidebar:
-    st.markdown("""
+    st.markdown(f"""
     <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
                 padding:1rem;border-radius:10px;margin-bottom:1rem;">
-        <h2 style="color:white;text-align:center;margin:0;">📁 Archivos</h2>
+        <h2 style="color:white;text-align:center;margin:0;display:flex;align-items:center;justify-content:center;gap:8px;">{svg_html('files',18,'#ffffff')}<span>Archivos</span></h2>
     </div>
     """, unsafe_allow_html=True)
 
-    with st.expander("📥 Descargar Plantillas", expanded=True):
-        st.markdown("##### 📋 Plantilla vacía")
+    with st.expander("Descargar Plantillas", expanded=True):
+        st.markdown(f"##### {svg_html('download',16,'#333333')} Plantilla vacía", unsafe_allow_html=True)
         st.download_button(
-            "⬇️ Plantilla (solo encabezados)",
+            "Plantilla (solo encabezados)",
             make_template_df().to_csv(index=False).encode("utf-8"),
             file_name="plantilla_estudiantes.csv", mime="text/csv",
             key="btn_plantilla", use_container_width=True,
         )
         st.markdown("---")
-        st.markdown("##### 📊 Archivo de ejemplo")
+        st.markdown(f"##### {svg_html('download',16,'#333333')} Archivo de ejemplo", unsafe_allow_html=True)
         st.download_button(
-            "⬇️ Ejemplo (50 estudiantes)",
+            "Ejemplo (50 estudiantes)",
             make_example_df().to_csv(index=False).encode("utf-8"),
             file_name="ejemplo_50_estudiantes.csv", mime="text/csv",
             key="btn_ejemplo50", use_container_width=True,
         )
 
     st.markdown("---")
-    st.markdown("""
+    st.markdown(f"""
     <div style="background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);
                 padding:1rem;border-radius:10px;margin-bottom:1rem;">
-        <h3 style="color:white;text-align:center;margin:0;">⚙️ Configuración</h3>
+        <h3 style="color:white;text-align:center;margin:0;display:flex;align-items:center;justify-content:center;gap:8px;">{svg_html('config',18,'#ffffff')}<span>Configuración</span></h3>
     </div>
     """, unsafe_allow_html=True)
 
@@ -340,11 +356,11 @@ with st.sidebar:
     <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;
                 padding:0.6rem;text-align:center;margin-top:0.5rem;">
         <strong>Umbral activo: {threshold:.2f}</strong><br>
-        <small>P ≥ {threshold:.2f} → 🚨 Deserta<br>P &lt; {threshold:.2f} → ✅ No deserta</small>
+        <small>P ≥ {threshold:.2f} → <strong style="color:#e74c3c;">Deserta</strong><br>P &lt; {threshold:.2f} → <strong style="color:#27ae60;">No deserta</strong></small>
     </div>
     """, unsafe_allow_html=True)
 
-tab_pred, tab_stats = st.tabs(["🎯 Predicción", "📈 Estadísticas del Modelo"])
+tab_pred, = st.tabs(["Predicción"])
 
 with tab_pred:
 
@@ -363,7 +379,7 @@ with tab_pred:
     """, unsafe_allow_html=True)
 
     uploaded_file = st.file_uploader(
-        "📤 Subir CSV/Excel con datos de estudiantes (sin columna SITUACION)",
+        "Subir CSV/Excel con datos de estudiantes (sin columna SITUACION)",
         type=["csv", "xlsx"], key="file_uploader_pred",
     )
 
@@ -469,8 +485,8 @@ with tab_pred:
         st.markdown(f"""
         <div style="background:linear-gradient(135deg,#fa709a 0%,#fee140 100%);
                     padding:1rem;border-radius:10px;margin:1.5rem 0 1rem 0;">
-            <h2 style="color:white;text-align:center;margin:0;">
-                📊 Resultados &nbsp;·&nbsp; Umbral activo: {threshold:.2f}
+            <h2 style="color:white;text-align:center;margin:0;display:flex;align-items:center;justify-content:center;gap:8px;">
+                {svg_html('download',22,'#ffffff')}<span>Resultados &nbsp;·&nbsp; Umbral activo: {threshold:.2f}</span>
             </h2>
         </div>
         """, unsafe_allow_html=True)
@@ -480,9 +496,9 @@ with tab_pred:
             counts = df_results["resultado_modelo"].value_counts().reindex(["No deserta", "Deserta"]).fillna(0).astype(int)
             total  = len(df_results)
             m1, m2, m3 = st.columns(3)
-            m1.metric("👥 Total", total)
-            m2.metric("✅ No desertan", counts.get("No deserta", 0), f"{counts.get('No deserta', 0)/total*100:.1f}%")
-            m3.metric("🚨 Desertan",    counts.get("Deserta", 0),    f"{counts.get('Deserta', 0)/total*100:.1f}%")
+            m1.metric("Total", total)
+            m2.metric("No desertan", counts.get("No deserta", 0), f"{counts.get('No deserta', 0)/total*100:.1f}%")
+            m3.metric("Desertan",    counts.get("Deserta", 0),    f"{counts.get('Deserta', 0)/total*100:.1f}%")
 
             fig_bar = px.bar(
                 x=counts.index, y=counts.values,
@@ -551,7 +567,7 @@ with tab_pred:
         st.markdown("---")
         _, cb, _ = st.columns([1, 2, 1])
         with cb:
-            st.download_button("💾 Descargar Resultados (CSV)",
+            st.download_button("Descargar Resultados (CSV)",
                                df_results.to_csv(index=False).encode("utf-8"),
                                file_name=f"resultados_umbral{threshold:.2f}.csv", mime="text/csv",
                                key="btn_dl_pred", use_container_width=True)
@@ -564,50 +580,4 @@ with tab_pred:
         </div>
         """, unsafe_allow_html=True)
 
-with tab_stats:
-
-    st.markdown("""
-    <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-                padding:1rem;border-radius:10px;margin-bottom:1.5rem;">
-        <h3 style="color:white;text-align:center;margin:0;">🏗️ Arquitectura del Modelo</h3>
-    </div>
-    """, unsafe_allow_html=True)
-
-    if model is not None:
-        c1, c2, c3, c4 = st.columns(4)
-        total_params    = model.count_params()
-        trainable       = sum(np.prod(w.shape) for w in model.trainable_weights)
-        non_trainable   = total_params - trainable
-        n_layers        = len(model.layers)
-        c1.metric("🧱 Capas",             n_layers)
-        c2.metric("🔢 Parámetros totales", f"{total_params:,}")
-        c3.metric("✏️ Entrenables",        f"{trainable:,}")
-        c4.metric("🔒 No entrenables",     f"{non_trainable:,}")
-
-        st.markdown("##### Detalle de capas")
-        layers_data = []
-        for layer in model.layers:
-            cfg   = layer.get_config()
-            ltype = layer.__class__.__name__
-            params = layer.count_params()
-            shape  = str(layer.output_shape) if hasattr(layer, "output_shape") else "—"
-            extra  = ""
-            if ltype == "Dense":
-                extra = f"activación: {cfg.get('activation','?')} | neuronas: {cfg.get('units','?')}"
-            elif ltype == "Dropout":
-                extra = f"rate: {cfg.get('rate','?')}"
-            layers_data.append({"Capa": layer.name, "Tipo": ltype, "Parámetros": params,
-                                 "Output shape": shape, "Detalle": extra})
-        st.dataframe(pd.DataFrame(layers_data), use_container_width=True, hide_index=True)
-
-        if scaler is not None:
-            st.markdown("##### Scaler (StandardScaler)")
-            sc1, sc2 = st.columns(2)
-            sc1.metric("Features de entrada", len(scaler.feature_names_in_))
-            sc2.metric("Archivo", SCALER_PATH)
-            with st.expander("Ver nombres de features"):
-                st.code(", ".join(scaler.feature_names_in_))
-    else:
-        st.error("❌ Modelo no cargado.")
-
-    st.markdown("---")
+# Sección de estadísticas del modelo eliminada por petición del usuario.

@@ -1,3 +1,20 @@
+# Entorno virtual
+.venv/
+
+# Archivos de entorno
 .env
-.venv
-.archivos_procesados
+
+# Artefactos generados por el entrenamiento
+modelo_desercion_nn.keras
+scaler.joblib
+
+# Archivos generados por la limpieza de datos
+Base_de_datos_estudiantes_ready_*.xlsx
+Base de datos estudiantes_ready_*.xlsx
+
+# Resultados de predicciones
+archivos_procesados/
+
+# Cache de Python
+__pycache__/
+*.pyc

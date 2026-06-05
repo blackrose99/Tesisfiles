@@ -1,106 +1,142 @@
 # Predicción de Deserción Estudiantil
 
-Proyecto Streamlit para predecir la deserción estudiantil usando un modelo de
-red neuronal entrenado. La aplicación valida la plantilla de entrada, realiza la
-predicción y permite descargar los resultados.
+Aplicación Streamlit que predice la deserción estudiantil usando una red neuronal. Sube un archivo CSV o Excel con datos de estudiantes y obtén las predicciones al instante.
 
-## Clonar el repositorio
+---
+
+## Requisito: Python 3.9 — 3.12
+
+Descarga e instala Python si no lo tienes:
+
+| Sistema | Descarga |
+|---|---|
+| **Windows** | [python.org/downloads](https://www.python.org/downloads/) — al instalar, marca **"Add Python to PATH"** |
+| **macOS** | `brew install python@3.12` o [python.org/downloads](https://www.python.org/downloads/) |
+| **Linux (Ubuntu/Debian)** | `sudo apt install python3.12 python3.12-venv python3.12-dev` |
+| **Linux (Arch)** | `sudo pacman -S python` |
+| **Linux (Fedora)** | `sudo dnf install python3.12 python3.12-devel` |
+
+Verifica que quedó bien instalado:
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
-cd Tesisfiles
+python3 --version
 ```
 
-## Crear y activar entorno virtual
+---
+
+## Quick Start
+
+Copia y pega **todo el bloque** correspondiente a tu sistema operativo en la terminal.
 
 ### Linux / macOS
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+git clone https://github.com/blackrose99/Tesisfiles.git && cd Tesisfiles && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && echo "✅ Todo listo. Pon tu archivo 'Base de datos estudiantes.xlsx' en la carpeta y luego ejecuta: python \"Limpieza de datos.py\" && python train.py && streamlit run app.py"
 ```
 
-### Windows (PowerShell)
-
-```powershell
-python -m venv .venv
-.venv\\Scripts\\Activate.ps1
-```
-
-## Instalar dependencias
+Después de ejecutar el bloque de arriba, **coloca tu archivo `Base de datos estudiantes.xlsx` en la carpeta `Tesisfiles/`** y ejecuta estos comandos uno por uno:
 
 ```bash
-pip install streamlit pandas numpy joblib tensorflow scikit-learn plotly openpyxl
-```
-
-## Entrenar el modelo (opcional)
-
-Si quieres volver a entrenar el modelo y regenerar los artefactos, ejecuta:
-
-```bash
+python "Limpieza de datos.py"
 python train.py
-```
-
-Al finalizar se generan (si corresponde):
-
-- `modelo_desercion_nn.keras` — modelo entrenado
-- `scaler.joblib` — scaler con las features esperadas por el modelo
-
-## Ejecutar la interfaz
-
-```bash
 streamlit run app.py
 ```
 
-La aplicación se abrirá en el navegador. Carga un archivo CSV o Excel usando la
-plantilla y, si todo es válido, podrás descargar los resultados con las
-predicciones.
+### Windows PowerShell
+
+```powershell
+git clone https://github.com/blackrose99/Tesisfiles.git; cd Tesisfiles; python -m venv .venv; .venv\Scripts\Activate.ps1; pip install -r requirements.txt; Write-Host "✅ Listo. Pon tu archivo 'Base de datos estudiantes.xlsx' en la carpeta y luego ejecuta: python `"Limpieza de datos.py`"; python train.py; streamlit run app.py"
+```
+
+Después, **coloca tu archivo `Base de datos estudiantes.xlsx` en la carpeta `Tesisfiles/`** y ejecuta:
+
+```powershell
+python "Limpieza de datos.py"
+python train.py
+streamlit run app.py
+```
+
+### Windows CMD
+
+```cmd
+git clone https://github.com/blackrose99/Tesisfiles.git && cd Tesisfiles && python -m venv .venv && .venv\Scripts\activate.bat && pip install -r requirements.txt && echo ✅ Listo. Pon tu archivo "Base de datos estudiantes.xlsx" en la carpeta y luego ejecuta: python "Limpieza de datos.py" ^&^& python train.py ^&^& streamlit run app.py
+```
+
+Después, **coloca tu archivo `Base de datos estudiantes.xlsx` en la carpeta `Tesisfiles/`** y ejecuta:
+
+```cmd
+python "Limpieza de datos.py"
+python train.py
+streamlit run app.py
+```
+
+---
+
+## Explicación de cada paso
+
+Solo para entender qué hace cada comando — si ya lo ejecutaste arriba, puedes saltarte esto.
+
+| Comando | ¿Qué hace? |
+|---|---|
+| `git clone ...` | Descarga el proyecto a tu computadora |
+| `cd Tesisfiles` | Entra a la carpeta del proyecto |
+| `python -m venv .venv` | Crea un entorno virtual (aisla las librerías) |
+| `source .venv/bin/activate` | Activa el entorno virtual |
+| `pip install -r requirements.txt` | Instala todas las librerías necesarias |
+| `python "Limpieza de datos.py"` | Limpia y prepara los datos para entrenar |
+| `python train.py` | Entrena la red neuronal y guarda el modelo |
+| `streamlit run app.py` | Inicia la interfaz web |
+
+---
 
 ## Estructura del proyecto
 
 ```
 Tesisfiles/
-├─ app.py
-├─ train.py
-├─ Limpieza de datos.py
-├─ modelo_desercion_nn.keras
-├─ scaler.joblib
-├─ test50.csv
-├─ README.md
-├─ archivos_procesados/
-│  └─ resultados/
-└─ Documents/
-   ├─ 2017-2019/
-   │  ├─ "Con situacion 2017-2019.xlsx - Situacion.csv"
-   │  └─ "Sin situacion 2017-2019.xlsx - Sheet1.csv"
-   ├─ 2020-2021/
-   │  ├─ "Con situacion 2020-2021.xlsx - Situacion.csv"
-   │  └─ "Sin situacion 2020-2021.xlsx - Sheet1.csv"
-   └─ 2022-2024/
-      ├─ "Con situacion 2022-2024.xlsx - Situacion.csv"
-      └─ "Sin situacion 2022-2025.xlsx - Sheet1.csv"
+├── app.py                        # Interfaz Streamlit
+├── train.py                      # Entrenamiento del modelo
+├── Limpieza de datos.py          # Limpieza y preparación de datos
+├── requirements.txt              # Dependencias del proyecto
+├── modelo_desercion_nn.keras     # Modelo entrenado (se genera al ejecutar train.py)
+├── scaler.joblib                 # Escalador (se genera al ejecutar train.py)
+├── test50.csv                    # Ejemplo con 50 estudiantes para pruebas
+├── README.md
+├── Base de datos estudiantes.xlsx # TU archivo de datos (debes agregarlo)
+├── archivos_procesados/          # Resultados de predicciones
+│   └── resultados/
+└── Documents/                    # Datos originales organizados por año
+    ├── 2017-2019/
+    ├── 2020-2021/
+    └── 2022-2024/
 ```
 
-> Nota: la estructura refleja los archivos y carpetas presentes en el
-> repositorio. Ajusta las rutas si mueves o renombras archivos.
+---
 
 ## Descripción de archivos principales
 
-- `app.py`: interfaz Streamlit, validaciones, predicción y exportación de resultados.
-- `train.py`: script de entrenamiento del modelo y guardado de artefactos.
-- `Limpieza de datos.py`: script de limpieza / preparación de datos.
-- `test50.csv`: ejemplo con 50 estudiantes para pruebas.
-- `modelo_desercion_nn.keras`: modelo entrenado (si existe).
-- `scaler.joblib`: scaler con las features esperadas por el modelo (si existe).
-- `archivos_procesados/resultados/`: carpeta con CSVs generados tras la predicción.
+| Archivo | Función |
+|---|---|
+| `app.py` | Interfaz web con Streamlit. Valida datos, predice y exporta resultados |
+| `train.py` | Entrena la red neuronal y guarda `modelo_desercion_nn.keras` y `scaler.joblib` |
+| `Limpieza de datos.py` | Procesa el Excel crudo y genera el archivo listo para entrenar |
+| `requirements.txt` | Lista de librerías para instalar con `pip install -r requirements.txt` |
+| `test50.csv` | Archivo de ejemplo con 50 estudiantes para probar la interfaz |
+| `modelo_desercion_nn.keras` | Modelo de red neuronal entrenado |
+| `scaler.joblib` | Escalador con las features que espera el modelo |
 
-## Plantilla y validaciones
+---
 
-La aplicación exige la estructura exacta de la plantilla (mismos encabezados).
-Si falta una columna, sobra una columna o hay datos inválidos, la app mostrará
-una tabla de errores indicando fila y columna.
+## Cómo usar la interfaz web
 
-Columnas requeridas:
+1. Ejecuta `streamlit run app.py`
+2. Se abrirá el navegador con la aplicación
+3. Descarga la **plantilla vacía** o el **archivo de ejemplo** desde la barra lateral
+4. Completa el archivo con los datos de los estudiantes
+5. Súbelo a la app (CSV o Excel)
+6. Si hay errores de validación, la app los muestra fila por fila
+7. Si todo está bien, descarga el CSV con las predicciones
+
+### Columnas requeridas en el archivo de entrada
 
 ```
 CODESTUDIANTE, ESTP_FECHAINGRESO, CREDITOSAPROBADOS, UBICACION_SEMESTRAL,
@@ -110,21 +146,20 @@ INFE_NUMEROFAMILIARES, INFE_NUMEROHERMANOS, INFE_POSICIONENHERMANOS,
 INFE_NUMMIEMBROSTRABAJA
 ```
 
-El archivo para predicción no debe incluir la columna `SITUACION`.
+> El archivo **no debe incluir** la columna `SITUACION`. Esa es la variable que el modelo predice.
 
-## Delimitador para CSV
+### Delimitador para CSV
 
-Si subes un CSV, la app detecta el delimitador (`,`, `;`, tabulación o `|`).
-Mantén un delimitador consistente por archivo para evitar errores de lectura.
-
-## Flujo recomendado
-
-1. Descarga la plantilla desde la interfaz.
-2. Completa el archivo con los datos requeridos.
-3. Sube el archivo y revisa la tabla de errores si aparece.
-4. Si todo es válido, descarga el CSV con los resultados.
+La app detecta automáticamente si usas `,`, `;`, tabulación o `|`. Mantén un solo delimitador en todo el archivo.
 
 ---
 
-Si quieres, puedo además generar una plantilla CSV con los encabezados requeridos
-o crear un `requirements.txt` para gestionar dependencias. ¿Lo hago?
+## Solución de problemas
+
+| Problema | Solución |
+|---|---|
+| `python: command not found` | Python no está instalado o no está en el PATH. Revisa la sección de requisitos |
+| `pip: command not found` | En Linux: `sudo apt install python3-pip` o `sudo pacman -S python-pip` |
+| `No module named ...` | No activaste el entorno virtual o no instalaste las dependencias. Ejecuta `source .venv/bin/activate` y luego `pip install -r requirements.txt` |
+| El modelo no se carga en la app | Ejecuta `python train.py` primero para generar `modelo_desercion_nn.keras` y `scaler.joblib` |
+| Error al leer el Excel | Asegúrate de que `Base de datos estudiantes.xlsx` está en la raíz del proyecto |

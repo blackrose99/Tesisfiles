@@ -1,3 +1,5 @@
+import os
+import glob
 import pandas as pd
 import numpy as np
 from joblib import dump
@@ -16,12 +18,33 @@ SEED = 42
 np.random.seed(SEED)
 tf.random.set_seed(SEED)
 
-ruta = "Base_de_datos_estudiantes_ready_step4_20260215_014516.xlsx"
+def get_latest_ready_file(pattern="Base_de_datos_estudiantes_ready_step4_*.xlsx"):
+    files = glob.glob(pattern)
+    if not files:
+        return None
+    return max(files, key=os.path.getmtime)
+
+ruta = get_latest_ready_file()
+if ruta is None:
+    raise FileNotFoundError(
+        "No se encontro un archivo 'Base_de_datos_estudiantes_ready_step4_*.xlsx'. "
+        "Ejecuta primero 'Limpieza de datos.py'."
+    )
+
+print(f"Archivo de entrenamiento: {ruta}")
 df = pd.read_excel(ruta)
 
 y = df["SITUACION"].astype(int)
 
 X = df.drop(columns=["SITUACION"])
+X = X.apply(pd.to_numeric, errors="coerce")
+
+valid_mask = ~X.isna().any(axis=1) & y.notna()
+invalid_count = int((~valid_mask).sum())
+if invalid_count > 0:
+    print(f"Filas descartadas por formato invalido: {invalid_count}")
+X = X.loc[valid_mask].copy()
+y = y.loc[valid_mask].copy()
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.20, random_state=SEED, stratify=y
@@ -102,3 +125,11 @@ dump(scaler, "scaler.joblib")
 print("Scaler guardado en:  scaler.joblib")
 print(f"Columnas del scaler: {list(scaler.feature_names_in_)}")
 print(f"Número de features:  {len(scaler.feature_names_in_)}")
+
+# Guardar background para SHAP
+rng = np.random.default_rng(SEED)
+bg_size = min(100, len(X_train_s))
+bg_idx = rng.choice(len(X_train_s), size=bg_size, replace=False)
+np.save("shap_background.npy", X_train_s[bg_idx])
+np.save("shap_feature_names.npy", np.array(scaler.feature_names_in_))
+print(f"Background SHAP guardado: shap_background.npy ({bg_size} filas)")

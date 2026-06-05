@@ -4,6 +4,7 @@ import numpy as np
 import os
 import csv
 import io
+import shap
 from joblib import load as joblib_load
 from tensorflow.keras.models import load_model
 from sklearn.metrics import (
@@ -108,6 +109,19 @@ def load_artifacts():
     return mdl, scl
 
 model, scaler = load_artifacts()
+
+@st.cache_resource
+def load_shap_explainer(_model):
+    if _model is None:
+        return None, None
+    if not os.path.exists("shap_background.npy") or not os.path.exists("shap_feature_names.npy"):
+        return None, None
+    background = np.load("shap_background.npy")
+    feature_names = np.load("shap_feature_names.npy", allow_pickle=True).tolist()
+    explainer = shap.Explainer(_model, background)
+    return explainer, feature_names
+
+explainer, shap_feature_names = load_shap_explainer(model)
 
 def make_template_df():
     return pd.DataFrame(columns=TEMPLATE_COLUMNS)
@@ -286,8 +300,34 @@ def prepare_for_model(df_cleaned, scaler):
     for col in expected_cols:
         if col not in df_cleaned.columns:
             df_cleaned[col] = 0
-    X = df_cleaned[expected_cols]
-    return scaler.transform(X)
+    df_aligned = df_cleaned[expected_cols].copy()
+    X_scaled = scaler.transform(df_aligned)
+    return X_scaled, df_aligned, expected_cols
+
+
+def reset_editor_selection():
+    st.session_state["selected_row"] = None
+    try:
+        st.query_params.clear()
+    except Exception:
+        pass
+
+
+def get_shap_values_for_row(explainer, X_row):
+    if explainer is None:
+        return None
+    shap_exp = explainer(X_row)
+    if isinstance(shap_exp, list):
+        shap_vals = shap_exp[0]
+    elif hasattr(shap_exp, "values"):
+        shap_vals = shap_exp.values
+    else:
+        shap_vals = shap_exp
+    if isinstance(shap_vals, list):
+        shap_vals = shap_vals[0]
+    if getattr(shap_vals, "ndim", 0) == 2:
+        return shap_vals[0]
+    return shap_vals
 
 
 st.markdown(f"""
@@ -347,7 +387,7 @@ with st.sidebar:
 
     threshold = st.slider(
         "Umbral P(deserta)",
-        min_value=0.0, max_value=1.0, value=0.5, step=0.01,
+        min_value=0.0, max_value=1.0, value=0.7, step=0.01,
         key="slider_threshold",
         help="P(deserta) ≥ umbral → Deserta (riesgo) | P(deserta) < umbral → No deserta",
     )
@@ -431,7 +471,7 @@ with tab_pred:
 
         with st.spinner("📏 Escalando..."):
             try:
-                X_scaled = prepare_for_model(df_cleaned.copy(), scaler)
+                X_scaled, df_aligned, expected_cols = prepare_for_model(df_cleaned.copy(), scaler)
             except Exception as e:
                 st.error(f"❌ Error al escalar: {e}")
                 st.stop()
@@ -454,6 +494,10 @@ with tab_pred:
         st.session_state["invalid_count"] = len(invalid_indices)
         st.session_state["valid_count"] = len(df_cleaned)
         st.session_state["total_count"] = len(df_raw)
+        st.session_state["X_scaled"] = X_scaled
+        st.session_state["df_aligned"] = df_aligned
+        st.session_state["expected_cols"] = expected_cols
+        st.session_state["df_valid_raw"] = df_valid_raw
 
     if "probs" in st.session_state:
 
@@ -491,86 +535,267 @@ with tab_pred:
         </div>
         """, unsafe_allow_html=True)
 
+        if "selected_row" not in st.session_state:
+            st.session_state["selected_row"] = None
+
         col1, col2 = st.columns([2, 1])
         with col1:
-            counts = df_results["resultado_modelo"].value_counts().reindex(["No deserta", "Deserta"]).fillna(0).astype(int)
-            total  = len(df_results)
+            filter_choice = st.segmented_control(
+                "Filtrar resultados",
+                ["Todos", "Deserta", "No deserta"],
+                default="Todos",
+                key="filter_results",
+                selection_mode="single",
+            )
+            df_view = df_results if filter_choice == "Todos" else df_results[df_results["resultado_modelo"] == filter_choice]
+
+            if st.session_state.get("last_filter") != filter_choice:
+                st.session_state["selected_row"] = None
+                st.session_state["last_filter"] = filter_choice
+
+            if df_view.empty:
+                st.warning("No hay registros con el filtro actual.")
+            counts = df_view["resultado_modelo"].value_counts().reindex(["No deserta", "Deserta"]).fillna(0).astype(int)
+            total  = int(len(df_view))
             m1, m2, m3 = st.columns(3)
             m1.metric("Total", total)
-            m2.metric("No desertan", counts.get("No deserta", 0), f"{counts.get('No deserta', 0)/total*100:.1f}%")
-            m3.metric("Desertan",    counts.get("Deserta", 0),    f"{counts.get('Deserta', 0)/total*100:.1f}%")
+            if total > 0:
+                m2.metric("No desertan", counts.get("No deserta", 0), f"{counts.get('No deserta', 0)/total*100:.1f}%")
+                m3.metric("Desertan",    counts.get("Deserta", 0),    f"{counts.get('Deserta', 0)/total*100:.1f}%")
+            else:
+                m2.metric("No desertan", 0)
+                m3.metric("Desertan", 0)
 
-            fig_bar = px.bar(
-                x=counts.index, y=counts.values,
-                color=counts.index,
-                color_discrete_map={"No deserta": "#2ecc71", "Deserta": "#e74c3c"},
-                labels={"x": "Estado", "y": "Estudiantes"},
-                title=f"Clasificación de Estudiantes (umbral={threshold:.2f})",
-            )
-            fig_bar.update_layout(showlegend=False, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(fig_bar, use_container_width=True, key="pred_bar")
+            if total > 0:
+                fig_bar = px.bar(
+                    x=counts.index, y=counts.values,
+                    color=counts.index,
+                    color_discrete_map={"No deserta": "#2ecc71", "Deserta": "#e74c3c"},
+                    labels={"x": "Estado", "y": "Estudiantes"},
+                    title=f"Clasificación de Estudiantes (umbral={threshold:.2f})",
+                )
+                fig_bar.update_layout(showlegend=False, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+                st.plotly_chart(fig_bar, use_container_width=True, key="pred_bar")
 
-            st.markdown("#### 📊 Distribución de P(deserta)")
-            st.caption("Derecha del umbral → Deserta (en riesgo). Izquierda → No deserta.")
-            fig_hist = px.histogram(df_results, x="p_desercion", nbins=40,
-                                    color_discrete_sequence=["#667eea"], labels={"p_desercion": "P(deserta)"})
-            fig_hist.add_vline(x=threshold, line_dash="dash", line_color="red",
-                               annotation_text=f"Umbral {threshold:.2f}", annotation_position="top right")
-            fig_hist.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", showlegend=False)
-            st.plotly_chart(fig_hist, use_container_width=True, key="pred_hist")
+                st.markdown("#### 📊 Distribución de P(deserta)")
+                st.caption("Derecha del umbral → Deserta (en riesgo). Izquierda → No deserta.")
+                fig_hist = px.histogram(df_view, x="p_desercion", nbins=40,
+                                        color_discrete_sequence=["#667eea"], labels={"p_desercion": "P(deserta)"})
+                fig_hist.add_vline(x=threshold, line_dash="dash", line_color="red",
+                                   annotation_text=f"Umbral {threshold:.2f}", annotation_position="top right")
+                fig_hist.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", showlegend=False)
+                st.plotly_chart(fig_hist, use_container_width=True, key="pred_hist")
 
             st.markdown("#### 📋 Detalle por estudiante")
             st.caption(f"p_desercion con umbral={threshold:.2f}: 🚨 ≥ {threshold:.2f} Deserta · ✅ < {threshold:.2f} No deserta")
+            st.caption("Haz clic en cualquier celda de la fila para ver el detalle del estudiante.")
 
-            def color_res(val):
-                return "color:#27ae60;font-weight:bold" if val == "No deserta" else "color:#e74c3c;font-weight:bold"
-
-            def color_p(val):
-                if val >= threshold:
-                    diff = val - threshold
-                    if diff >= 0.15:
-                        return "background-color:#fde8e8"
-                    else:
-                        return "background-color:#fff3cd"
-                return "background-color:#e8f8e8"
-
-            st.dataframe(
-                df_results.style
-                    .map(color_res, subset=["resultado_modelo"])
-                    .map(color_p,   subset=["p_desercion"]),
-                use_container_width=True, height=420,
+            df_display = df_view[["identificador", "p_desercion", "resultado_modelo"]].copy()
+            df_display["Estado"] = np.where(
+                df_display["resultado_modelo"] == "Deserta",
+                "🔴 Deserta",
+                "🟢 No deserta",
             )
+            df_display = df_display[["identificador", "p_desercion", "Estado"]]
+
+            table_seq = st.session_state.get("table_seq", 0)
+            ev = st.dataframe(
+                df_display,
+                column_config={
+                    "identificador": "Código",
+                    "p_desercion": st.column_config.NumberColumn("P(deserta)", format="%.4f"),
+                    "Estado": "Estado",
+                },
+                hide_index=True,
+                use_container_width=True,
+                height=420,
+                on_select="rerun",
+                selection_mode="single-row",
+                key=f"results_table_{table_seq}",
+            )
+
+            if ev and ev.selection and ev.selection.rows:
+                sel_idx = ev.selection.rows[0]
+                if sel_idx < len(df_view.index):
+                    orig_idx = int(df_view.index[sel_idx])
+                    if st.session_state.get("selected_row") != orig_idx:
+                        st.session_state["selected_row"] = orig_idx
 
         with col2:
             st.markdown("#### 📉 Estadísticas")
-            pmean = float(np.nanmean(probs));  p25 = float(np.nanpercentile(probs, 25))
-            p50   = float(np.nanpercentile(probs, 50)); p75 = float(np.nanpercentile(probs, 75))
-            pstd  = float(np.nanstd(probs));   pmin = float(np.nanmin(probs)); pmax = float(np.nanmax(probs))
-            st.metric("Promedio P(deserta)", f"{pmean:.3f}")
-            st.metric("Percentil 25",  f"{p25:.3f}")
-            st.metric("Mediana",       f"{p50:.3f}")
-            st.metric("Percentil 75",  f"{p75:.3f}")
-            st.metric("Desv. Estándar",f"{pstd:.3f}")
-            st.metric("Mínimo",        f"{pmin:.3f}")
-            st.metric("Máximo",        f"{pmax:.3f}")
+            p_series = df_view["p_desercion"]
+            if len(p_series) > 0:
+                pmean = float(np.nanmean(p_series));  p25 = float(np.nanpercentile(p_series, 25))
+                p50   = float(np.nanpercentile(p_series, 50)); p75 = float(np.nanpercentile(p_series, 75))
+                pstd  = float(np.nanstd(p_series));   pmin = float(np.nanmin(p_series)); pmax = float(np.nanmax(p_series))
+                st.metric("Promedio P(deserta)", f"{pmean:.3f}")
+                st.metric("Percentil 25",  f"{p25:.3f}")
+                st.metric("Mediana",       f"{p50:.3f}")
+                st.metric("Percentil 75",  f"{p75:.3f}")
+                st.metric("Desv. Estándar",f"{pstd:.3f}")
+                st.metric("Mínimo",        f"{pmin:.3f}")
+                st.metric("Máximo",        f"{pmax:.3f}")
+            else:
+                st.metric("Promedio P(deserta)", "-" )
+                st.metric("Percentil 25",  "-")
+                st.metric("Mediana",       "-")
+                st.metric("Percentil 75",  "-")
+                st.metric("Desv. Estándar", "-")
+                st.metric("Mínimo",        "-")
+                st.metric("Máximo",        "-")
             st.markdown("---")
 
             st.markdown(f"**Umbral activo:** `{threshold:.2f}`")
-            pct_deserta = counts.get("Deserta", 0) / total * 100
-            if pct_deserta >= 60:
+            pct_deserta = (counts.get("Deserta", 0) / total * 100) if total > 0 else 0
+            if total == 0:
+                st.info("Sin registros para calcular riesgo grupal.")
+            elif pct_deserta >= 60:
                 st.error(f"🔴 **Alto riesgo grupal** ({pct_deserta:.1f}% desertan)")
             elif pct_deserta >= 30:
                 st.warning(f"🟡 **Riesgo moderado** ({pct_deserta:.1f}% desertan)")
             else:
                 st.success(f"🟢 **Grupo de bajo riesgo** ({pct_deserta:.1f}% desertan)")
 
+        selected_row = st.session_state.get("selected_row")
+        if selected_row is not None:
+            def render_student_detail():
+                probs_local = st.session_state.get("probs")
+                ids_local = st.session_state.get("ids")
+                X_scaled_local = st.session_state.get("X_scaled")
+                df_aligned_local = st.session_state.get("df_aligned")
+                expected_cols_local = st.session_state.get("expected_cols") or []
+
+                if probs_local is None or ids_local is None or X_scaled_local is None or df_aligned_local is None:
+                    st.warning("No hay datos suficientes para generar la explicación.")
+                    return
+
+                if selected_row >= len(probs_local):
+                    st.warning("El estudiante seleccionado no está disponible.")
+                    return
+
+                student_id = ids_local[selected_row]
+                prob = float(probs_local[selected_row])
+                result = "Deserta" if prob >= threshold else "No deserta"
+
+                st.markdown(f"**Estudiante:** `{student_id}`")
+                st.markdown(f"**P(deserta):** `{prob:.4f}` → **{result}**")
+
+                if explainer is None:
+                    st.warning("No se encontró el background de SHAP. Ejecuta 'train.py' nuevamente para generarlo.")
+                    return
+
+                X_row = X_scaled_local[selected_row].reshape(1, -1)
+                shap_vals = get_shap_values_for_row(explainer, X_row)
+                feature_names = shap_feature_names if shap_feature_names else expected_cols_local
+
+                if shap_vals is None or len(feature_names) != len(shap_vals):
+                    st.warning("No se pudo calcular la explicación para este estudiante.")
+                    return
+
+                row_values = df_aligned_local.iloc[selected_row].values
+                raw_row = None
+                df_raw_local = st.session_state.get("df_valid_raw")
+                if df_raw_local is not None and selected_row < len(df_raw_local):
+                    raw_row = df_raw_local.iloc[selected_row]
+                df_shap = pd.DataFrame({
+                    "feature": feature_names,
+                    "valor": row_values,
+                    "shap": shap_vals,
+                })
+                df_shap["abs"] = df_shap["shap"].abs()
+
+                if raw_row is not None:
+                    raw_values = {}
+                    for feat in feature_names:
+                        raw_values[feat] = raw_row.get(feat, None)
+                    df_shap["valor_original"] = df_shap["feature"].map(raw_values)
+
+                top3 = df_shap.sort_values("abs", ascending=False).head(3)
+                pos3 = df_shap[df_shap["shap"] > 0].sort_values("shap", ascending=False).head(3)
+                neg3 = df_shap[df_shap["shap"] < 0].sort_values("shap").head(3)
+
+                st.markdown("**Top 3 variables que mas influyeron**")
+                for _, row in top3.iterrows():
+                    raw_val = row.get("valor_original", None)
+                    if pd.notna(raw_val):
+                        st.write(f"- {row['feature']}: {raw_val} (impacto {row['shap']:.4f})")
+                    else:
+                        st.write(f"- {row['feature']}: {row['valor']} (impacto {row['shap']:.4f})")
+
+                df_plot = df_shap.sort_values("abs", ascending=False).head(10).copy()
+                df_plot["impacto"] = np.where(df_plot["shap"] >= 0, "Aumenta riesgo", "Reduce riesgo")
+                fig = px.bar(
+                    df_plot.sort_values("shap"),
+                    x="shap",
+                    y="feature",
+                    color="impacto",
+                    orientation="h",
+                    color_discrete_map={"Aumenta riesgo": "#e74c3c", "Reduce riesgo": "#2ecc71"},
+                    labels={"shap": "Impacto", "feature": "Variable"},
+                    title="Impacto de variables (Top 10)",
+                )
+                fig.update_layout(showlegend=True, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+                st.plotly_chart(fig, use_container_width=True)
+
+                if not pos3.empty or not neg3.empty:
+                    st.markdown("**Patrones individuales**")
+                    if not pos3.empty:
+                        st.write("Factores que aumentan la probabilidad de desercion:")
+                        for _, row in pos3.iterrows():
+                            raw_val = row.get("valor_original", None)
+                            if pd.notna(raw_val):
+                                st.write(f"- {row['feature']}: {raw_val} (impacto {row['shap']:.4f})")
+                            else:
+                                st.write(f"- {row['feature']}: {row['valor']} (impacto {row['shap']:.4f})")
+                    if not neg3.empty:
+                        st.write("Factores que reducen la probabilidad de desercion:")
+                        for _, row in neg3.iterrows():
+                            raw_val = row.get("valor_original", None)
+                            if pd.notna(raw_val):
+                                st.write(f"- {row['feature']}: {raw_val} (impacto {row['shap']:.4f})")
+                            else:
+                                st.write(f"- {row['feature']}: {row['valor']} (impacto {row['shap']:.4f})")
+
+                if raw_row is not None:
+                    st.markdown("**Datos originales del estudiante**")
+                    st.dataframe(raw_row.to_frame("valor").reset_index().rename(columns={"index": "campo"}),
+                                 use_container_width=True, height=260)
+
+                if st.button("Cerrar", key="close_student_detail"):
+                    st.session_state["selected_row"] = None
+                    st.session_state["table_seq"] = st.session_state.get("table_seq", 0) + 1
+                    st.rerun()
+
+            st.markdown("""
+            <div style="background:#1a1a2e;padding:1.5rem;border-radius:12px;margin:1rem 0;
+                        border:2px solid #667eea;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+                <h3 style="color:white;margin:0 0 0.5rem 0;">📊 Detalle del estudiante</h3>
+            </div>
+            """, unsafe_allow_html=True)
+            with st.container():
+                render_student_detail()
+
         st.markdown("---")
-        _, cb, _ = st.columns([1, 2, 1])
-        with cb:
-            st.download_button("Descargar Resultados (CSV)",
-                               df_results.to_csv(index=False).encode("utf-8"),
-                               file_name=f"resultados_umbral{threshold:.2f}.csv", mime="text/csv",
-                               key="btn_dl_pred", use_container_width=True)
+        c1, c2 = st.columns(2)
+        with c1:
+            st.download_button(
+                "Descargar resultados visibles (CSV)",
+                df_view.to_csv(index=False).encode("utf-8"),
+                file_name=f"resultados_filtrados_umbral{threshold:.2f}.csv",
+                mime="text/csv",
+                key="btn_dl_filtered",
+                use_container_width=True,
+                disabled=df_view.empty,
+            )
+        with c2:
+            st.download_button(
+                "Descargar todos los resultados (CSV)",
+                df_results.to_csv(index=False).encode("utf-8"),
+                file_name=f"resultados_umbral{threshold:.2f}.csv",
+                mime="text/csv",
+                key="btn_dl_all",
+                use_container_width=True,
+            )
 
     elif uploaded_file is None:
         st.markdown("""

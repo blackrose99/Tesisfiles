@@ -1,165 +1,315 @@
 # Predicción de Deserción Estudiantil
 
-Aplicación Streamlit que predice la deserción estudiantil usando una red neuronal. Sube un archivo CSV o Excel con datos de estudiantes y obtén las predicciones al instante.
+Aplicación Streamlit que predice la deserción estudiantil usando una red neuronal.
 
 ---
 
-## Requisito: Python 3.9 — 3.12
+# Instalación Paso a Paso
 
-Descarga e instala Python si no lo tienes:
+## 1. Verificar Python
 
-| Sistema | Descarga |
-|---|---|
-| **Windows** | [python.org/downloads](https://www.python.org/downloads/) — al instalar, marca **"Add Python to PATH"** |
-| **macOS** | `brew install python@3.12` o [python.org/downloads](https://www.python.org/downloads/) |
-| **Linux (Ubuntu/Debian)** | `sudo apt install python3.12 python3.12-venv python3.12-dev` |
-| **Linux (Arch)** | `sudo pacman -S python` |
-| **Linux (Fedora)** | `sudo dnf install python3.12 python3.12-devel` |
-
-Verifica que quedó bien instalado:
+### Linux / macOS
 
 ```bash
 python3 --version
 ```
 
----
-
-## Quick Start
-
-Copia y pega **todo el bloque** correspondiente a tu sistema operativo en la terminal.
-
-### Linux / macOS
-
-```bash
-git clone https://github.com/blackrose99/Tesisfiles.git && cd Tesisfiles && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && echo "✅ Todo listo. Pon tu archivo 'Base de datos estudiantes.xlsx' en la carpeta y luego ejecuta: python \"Limpieza de datos.py\" && python train.py && streamlit run app.py"
-```
-
-Después de ejecutar el bloque de arriba, **coloca tu archivo `Base de datos estudiantes.xlsx` en la carpeta `Tesisfiles/`** y ejecuta estos comandos uno por uno:
-
-```bash
-python "Limpieza de datos.py"
-python train.py
-streamlit run app.py
-```
-
-### Windows PowerShell
-
-```powershell
-git clone https://github.com/blackrose99/Tesisfiles.git; cd Tesisfiles; python -m venv .venv; .venv\Scripts\Activate.ps1; pip install -r requirements.txt; Write-Host "✅ Listo. Pon tu archivo 'Base de datos estudiantes.xlsx' en la carpeta y luego ejecuta: python `"Limpieza de datos.py`"; python train.py; streamlit run app.py"
-```
-
-Después, **coloca tu archivo `Base de datos estudiantes.xlsx` en la carpeta `Tesisfiles/`** y ejecuta:
-
-```powershell
-python "Limpieza de datos.py"
-python train.py
-streamlit run app.py
-```
-
-### Windows CMD
+### Windows
 
 ```cmd
-git clone https://github.com/blackrose99/Tesisfiles.git && cd Tesisfiles && python -m venv .venv && .venv\Scripts\activate.bat && pip install -r requirements.txt && echo ✅ Listo. Pon tu archivo "Base de datos estudiantes.xlsx" en la carpeta y luego ejecuta: python "Limpieza de datos.py" ^&^& python train.py ^&^& streamlit run app.py
+python --version
 ```
 
-Después, **coloca tu archivo `Base de datos estudiantes.xlsx` en la carpeta `Tesisfiles/`** y ejecuta:
+Debe mostrar una versión entre:
+
+```text
+Python 3.9
+Python 3.10
+Python 3.11
+Python 3.12
+```
+
+---
+
+# Linux (Ubuntu / Debian)
+
+## Instalar dependencias necesarias
+
+```bash
+sudo apt update
+```
+
+```bash
+sudo apt install -y git python3 python3-pip python3-venv
+```
+
+## Clonar el proyecto
+
+```bash
+git clone https://github.com/blackrose99/Tesisfiles.git
+```
+
+## Entrar al proyecto
+
+```bash
+cd Tesisfiles
+```
+
+## Crear entorno virtual
+
+```bash
+python3 -m venv .venv
+```
+
+## Activar entorno virtual
+
+```bash
+source .venv/bin/activate
+```
+
+## Actualizar pip
+
+```bash
+pip install --upgrade pip
+```
+
+## Instalar dependencias
+
+```bash
+pip install -r requirements.txt
+```
+
+## Verificar instalación
+
+```bash
+pip list
+```
+
+---
+
+# Windows PowerShell
+
+## Clonar el proyecto
+
+```powershell
+git clone https://github.com/blackrose99/Tesisfiles.git
+```
+
+## Entrar al proyecto
+
+```powershell
+cd Tesisfiles
+```
+
+## Crear entorno virtual
+
+```powershell
+python -m venv .venv
+```
+
+## Activar entorno virtual
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+Si aparece un error de ejecución:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+y vuelve a ejecutar:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+## Actualizar pip
+
+```powershell
+python -m pip install --upgrade pip
+```
+
+## Instalar dependencias
+
+```powershell
+pip install -r requirements.txt
+```
+
+---
+
+# Windows CMD
+
+## Clonar el proyecto
 
 ```cmd
-python "Limpieza de datos.py"
-python train.py
-streamlit run app.py
+git clone https://github.com/blackrose99/Tesisfiles.git
+```
+
+## Entrar al proyecto
+
+```cmd
+cd Tesisfiles
+```
+
+## Crear entorno virtual
+
+```cmd
+python -m venv .venv
+```
+
+## Activar entorno virtual
+
+```cmd
+.venv\Scripts\activate.bat
+```
+
+## Actualizar pip
+
+```cmd
+python -m pip install --upgrade pip
+```
+
+## Instalar dependencias
+
+```cmd
+pip install -r requirements.txt
 ```
 
 ---
 
-## Explicación de cada paso
+# Procesamiento y Entrenamiento
 
-Solo para entender qué hace cada comando — si ya lo ejecutaste arriba, puedes saltarte esto.
+Después de instalar todo:
 
-| Comando | ¿Qué hace? |
-|---|---|
-| `git clone ...` | Descarga el proyecto a tu computadora |
-| `cd Tesisfiles` | Entra a la carpeta del proyecto |
-| `python -m venv .venv` | Crea un entorno virtual (aisla las librerías) |
-| `source .venv/bin/activate` | Activa el entorno virtual |
-| `pip install -r requirements.txt` | Instala todas las librerías necesarias |
-| `python "Limpieza de datos.py"` | Limpia y prepara los datos para entrenar |
-| `python train.py` | Entrena la red neuronal y guarda el modelo |
-| `streamlit run app.py` | Inicia la interfaz web |
+## Copiar archivo de datos
 
----
+Coloque el archivo:
 
-## Estructura del proyecto
-
+```text
+Base de datos estudiantes.xlsx
 ```
+
+en la carpeta raíz del proyecto:
+
+```text
 Tesisfiles/
-├── app.py                        # Interfaz Streamlit
-├── train.py                      # Entrenamiento del modelo
-├── Limpieza de datos.py          # Limpieza y preparación de datos
-├── requirements.txt              # Dependencias del proyecto
-├── modelo_desercion_nn.keras     # Modelo entrenado (se genera al ejecutar train.py)
-├── scaler.joblib                 # Escalador (se genera al ejecutar train.py)
-├── test50.csv                    # Ejemplo con 50 estudiantes para pruebas
-├── README.md
-├── Base de datos estudiantes.xlsx # TU archivo de datos (debes agregarlo)
-├── archivos_procesados/          # Resultados de predicciones
-│   └── resultados/
-└── Documents/                    # Datos originales organizados por año
-    ├── 2017-2019/
-    ├── 2020-2021/
-    └── 2022-2024/
+```
+
+## Limpiar datos
+
+```bash
+python "Limpieza de datos.py"
+```
+
+## Entrenar modelo
+
+```bash
+python train.py
+```
+
+Al finalizar se generarán:
+
+```text
+modelo_desercion_nn.keras
+scaler.joblib
+```
+
+## Ejecutar aplicación
+
+```bash
+streamlit run app.py
 ```
 
 ---
 
-## Descripción de archivos principales
+# Solución de Problemas
 
-| Archivo | Función |
-|---|---|
-| `app.py` | Interfaz web con Streamlit. Valida datos, predice y exporta resultados |
-| `train.py` | Entrena la red neuronal y guarda `modelo_desercion_nn.keras` y `scaler.joblib` |
-| `Limpieza de datos.py` | Procesa el Excel crudo y genera el archivo listo para entrenar |
-| `requirements.txt` | Lista de librerías para instalar con `pip install -r requirements.txt` |
-| `test50.csv` | Archivo de ejemplo con 50 estudiantes para probar la interfaz |
-| `modelo_desercion_nn.keras` | Modelo de red neuronal entrenado |
-| `scaler.joblib` | Escalador con las features que espera el modelo |
+## Error: ensurepip is not available
+
+Ubuntu/Debian:
+
+```bash
+sudo apt install python3-venv
+```
+
+o
+
+```bash
+sudo apt install python3.10-venv
+```
+
+según la versión instalada.
 
 ---
 
-## Cómo usar la interfaz web
+## Error: python command not found
 
-1. Ejecuta `streamlit run app.py`
-2. Se abrirá el navegador con la aplicación
-3. Descarga la **plantilla vacía** o el **archivo de ejemplo** desde la barra lateral
-4. Completa el archivo con los datos de los estudiantes
-5. Súbelo a la app (CSV o Excel)
-6. Si hay errores de validación, la app los muestra fila por fila
-7. Si todo está bien, descarga el CSV con las predicciones
+Verifique:
 
-### Columnas requeridas en el archivo de entrada
-
-```
-CODESTUDIANTE, ESTP_FECHAINGRESO, CREDITOSAPROBADOS, UBICACION_SEMESTRAL,
-PROMEDIO_GENERAL, PROGRAMA, JORNADA, GENERO, FECHA_NACIMIENTO, CIUDADRESIDENCIA,
-ESTRATO, TIENE_SISBEN, INFE_VIVECONFAMILIA, INFE_SITUACIONPADRES,
-INFE_NUMEROFAMILIARES, INFE_NUMEROHERMANOS, INFE_POSICIONENHERMANOS,
-INFE_NUMMIEMBROSTRABAJA
+```bash
+python3 --version
 ```
 
-> El archivo **no debe incluir** la columna `SITUACION`. Esa es la variable que el modelo predice.
+Si no existe:
 
-### Delimitador para CSV
-
-La app detecta automáticamente si usas `,`, `;`, tabulación o `|`. Mantén un solo delimitador en todo el archivo.
+```bash
+sudo apt install python3
+```
 
 ---
 
-## Solución de problemas
+## Error: pip command not found
 
-| Problema | Solución |
-|---|---|
-| `python: command not found` | Python no está instalado o no está en el PATH. Revisa la sección de requisitos |
-| `pip: command not found` | En Linux: `sudo apt install python3-pip` o `sudo pacman -S python-pip` |
-| `No module named ...` | No activaste el entorno virtual o no instalaste las dependencias. Ejecuta `source .venv/bin/activate` y luego `pip install -r requirements.txt` |
-| El modelo no se carga en la app | Ejecuta `python train.py` primero para generar `modelo_desercion_nn.keras` y `scaler.joblib` |
-| Error al leer el Excel | Asegúrate de que `Base de datos estudiantes.xlsx` está en la raíz del proyecto |
+Ubuntu/Debian:
+
+```bash
+sudo apt install python3-pip
+```
+
+---
+
+## Error: No module named ...
+
+Active nuevamente el entorno virtual:
+
+Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+Windows:
+
+```cmd
+.venv\Scripts\activate.bat
+```
+
+o
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+Luego reinstale:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Error al abrir Excel
+
+Verifique que exista exactamente:
+
+```text
+Base de datos estudiantes.xlsx
+```
+
+en:
+
+```text
+Tesisfiles/Base de datos estudiantes.xlsx
+```

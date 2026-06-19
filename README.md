@@ -1,91 +1,114 @@
-# Plataforma de Alerta Temprana y Predicción de Deserción Estudiantil (Rama Beta)
+# Plataforma Inteligente de Alerta Temprana y Predicción de Deserción Estudiantil
 
-Este proyecto implementa una plataforma inteligente de predicción de deserción académica y análisis de riesgo estudiantil. Cuenta con una arquitectura desacoplada basada en **Clean Architecture**, algoritmos avanzados de AutoML (CatBoost optimizado con Optuna), explicabilidad mediante SHAP, y un panel web interactivo en Streamlit.
+Este proyecto implementa una plataforma avanzada para predecir el riesgo de deserción académica y generar recomendaciones automatizadas de intervención institucional. La plataforma cuenta con una arquitectura desacoplada basada en **Clean Architecture**, algoritmos avanzados de Machine Learning (CatBoost optimizado con Optuna), explicabilidad individual mediante SHAP (evaluada perezosamente bajo demanda) y un panel interactivo desarrollado en Streamlit.
 
 ---
 
-## ⚡ Guía de Inicio Rápido (Copy-Paste)
+## ⚡ Guía de Inicio Rápido (Comandos Uno a Uno)
 
-Copia y pega **todo el bloque** correspondiente a tu sistema operativo en la terminal para descargar dependencias, entrenar el modelo campeón y ejecutar el servidor web local.
+Para garantizar una configuración exitosa libre de restricciones políticas en Windows PowerShell, ejecuta los siguientes comandos uno por uno en la consola:
 
-### 🔴 Windows PowerShell (Recomendado)
-> [!IMPORTANT]
-> Si PowerShell arroja un error de ejecución de scripts de administrador al intentar activar el entorno, **esta línea soluciona el problema de forma automática** ejecutando directamente los binarios del entorno virtual sin activar scripts restrictivos de Windows:
+### 🔴 Windows PowerShell
+
 ```powershell
-python -m venv .venv; & .venv/Scripts/python.exe -m pip install --upgrade pip; & .venv/Scripts/python.exe -m pip install -r requirements.txt; & .venv/Scripts/python.exe train.py; & .venv/Scripts/streamlit.exe run app.py
-```
+# 1. Crear el entorno virtual de Python
+python -m venv .venv
 
-*Si deseas forzar la activación clásica en PowerShell omitiendo las restricciones políticas de Windows de forma segura (sin privilegios de Administrador), puedes ejecutar:*
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process; .venv\Scripts\Activate.ps1
-```
+# 2. Omitir políticas de restricción de ejecución de scripts para la sesión actual
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 
-### ⚪ Windows CMD (Consola Clásica)
-```cmd
-python -m venv .venv && .venv\Scripts\python.exe -m pip install --upgrade pip && .venv\Scripts\python.exe -m pip install -r requirements.txt && .venv\Scripts\python.exe train.py && .venv\Scripts\streamlit.exe run app.py
+# 3. Activar el entorno virtual de Python (.venv)
+.venv\Scripts\Activate.ps1
+
+# 4. Actualizar el gestor de paquetes pip a su última versión
+python -m pip install --upgrade pip
+
+# 5. Instalar todas las dependencias requeridas del proyecto
+pip install -r requirements.txt
+
+# 6. Entrenar el modelo campeón (CatBoost optimizado con Optuna)
+python train.py
+
+# 7. Ejecutar el servidor web local interactivo de Streamlit
+streamlit run app.py
 ```
 
 ### 🔵 Linux / macOS
+
 ```bash
-python3 -m venv .venv && .venv/bin/pip install --upgrade pip && .venv/bin/pip install -r requirements.txt && .venv/bin/python train.py && .venv/bin/streamlit run app.py
+# 1. Crear el entorno virtual de Python
+python3 -m venv .venv
+
+# 2. Activar el entorno virtual de Python
+source .venv/bin/activate
+
+# 3. Actualizar el gestor de paquetes pip
+pip install --upgrade pip
+
+# 4. Instalar las dependencias del proyecto
+pip install -r requirements.txt
+
+# 5. Ejecutar el reentrenamiento del modelo campeón
+python train.py
+
+# 6. Iniciar la aplicación en Streamlit
+streamlit run app.py
 ```
 
 ---
 
-## 📁 Estructura General del Proyecto
+## 🚀 Lanzador Rápido para Windows (`run_app.bat`)
 
-```
-Tesisfiles/
-├── dataset/                     # Directorio unificado de insumos y bases de datos
-│   ├── student_database.xlsx    # Archivo Excel original con datos históricos de estudiantes
-│   ├── students_with_status.csv # Dataset depurado de estudiantes con estado resuelto
-│   ├── students_without_status.csv # Dataset para predicción masiva sin etiquetas
-│   ├── sample_50_students.csv   # Muestra rápida de 50 estudiantes para demostraciones
-│   └── original_documents/      # Histórico original de documentos de la universidad
-├── src/                         # Código fuente estructurado (Clean Architecture)
-│   ├── domain/                  # Entidades nucleares e interfaces (SOLID)
-│   │   ├── entities/            # Entidades Student y Prediction
-│   │   ├── repositories/        # Contratos StudentRepository y ModelRepository
-│   │   └── services/            # Interfaz de estrategia de modelo predictivo
-│   ├── infrastructure/          # Implementaciones tecnológicas
-│   │   ├── ml/                  # Algoritmos, preprocesadores y entrenadores
-│   │   ├── reports/             # Generador de reportes en PDF
-│   │   └── repositories/        # Repositorios concretos de persistencia (Excel/JSON)
-│   └── application/             # Casos de uso de negocio (Use Cases)
-│       ├── train_use_case.py    # Flujo de reentrenamiento, comparación y tuning
-│       ├── predict_use_case.py  # Predicción en lotes / individuales y cálculo SHAP
-│       └── monitor_use_case.py  # Detección de Data Drift (KS-Test)
-├── model_registry/              # Historial estructurado y versionamiento de modelos
-│   ├── registry.json            # Metadatos del modelo activo y métricas históricas
-│   └── models/                  # Binarios de preprocesadores y modelos por versión
-├── app.py                       # Interfaz gráfica web interactiva de Streamlit
-├── train.py                     # Entrypoint de consola para el reentrenamiento del modelo
-├── requirements.txt             # Dependencias del proyecto actualizadas
-└── README.md                    # Este manual técnico
-```
+Si estás en Windows y prefieres no interactuar con la línea de comandos, hemos creado un iniciador automático de doble clic:
+
+👉 [Descargar e iniciar con run_app.bat](file:///home/lmcastano/Documentos/projects/Tesisfiles/run_app.bat)
+
+Al hacer **doble clic** sobre [run_app.bat](file:///home/lmcastano/Documentos/projects/Tesisfiles/run_app.bat):
+1. Detecta automáticamente si tienes Python instalado (si no, abre el instalador oficial).
+2. Crea el entorno virtual `.venv` e instala las dependencias de forma automatizada.
+3. Entrena el modelo si no existe un binario activo en el sistema.
+4. Lanza el servidor Streamlit y abre la aplicación en tu navegador de forma transparente.
 
 ---
 
-## ⚙️ Funcionalidades Clave
+## 📦 Compilación y Generación del Ejecutable Independiente (`.exe`)
 
-1. **AutoML y Selección**: Compara automáticamente en cada reentrenamiento 7 algoritmos diferentes (Logistic Regression, Random Forest, Extra Trees, Gradient Boosting, XGBoost, LightGBM, y CatBoost) usando Validación Cruzada de 5 pliegues y selecciona el campeón.
-2. **Optimización Bayesiana**: Sintoniza los parámetros del modelo campeón usando **Optuna** para exprimir el rendimiento de clasificación.
-3. **Fuga Temporal Resuelta**: Se excluyó la variable de año de ingreso para asegurar que la inteligencia artificial prediga basándose en variables académicas/socioeconómicas en lugar del año calendario.
-4. **Monitoreo de Data Drift**: Implementa la prueba estadística Kolmogorov-Smirnov (KS-test) para advertir al administrador cuando los perfiles de los nuevos estudiantes cargados difieran significativamente de la muestra de entrenamiento original.
-5. **Reportes PDF**: Descarga fichas personalizadas para cada estudiante con planes de intervención sugeridos según su perfil de riesgo.
+Dado que nuestro servidor de desarrollo opera en Linux, no es técnicamente viable compilar un archivo binario nativo de Windows Portable Executable (`.exe`) directamente desde aquí. Sin embargo, hemos provisto un wrapper seguro llamado [run_streamlit.py](file:///home/lmcastano/Documentos/projects/Tesisfiles/run_streamlit.py) para que lo compiles en cualquier máquina con Windows.
 
----
+### Comandos de compilación en Windows:
 
-## 📦 Empaquetado para Windows (.exe)
-Para distribuir la plataforma a usuarios finales que no tienen instalado Python, puedes compilar un ejecutable autocontenido de doble clic mediante **PyInstaller**.
-
-1. Instala PyInstaller:
-   ```bash
-   .venv/bin/pip install pyinstaller   # Linux
-   .venv\Scripts\pip.exe install pyinstaller # Windows
+1. **Activa tu entorno virtual e instala PyInstaller**:
+   ```powershell
+   pip install pyinstaller
    ```
-2. Ejecuta el comando de compilación:
-   ```bash
-   pyinstaller --name "AlertaTempranaAcademica" --onefile --add-data "model_registry:model_registry" --add-data "shap_background.npy:." --add-data "shap_feature_names.npy:." --add-data "src:src" app.py
+2. **Ejecuta la compilación autocontenida de Streamlit**:
+   ```powershell
+   pyinstaller --name "AlertaTemprana" --onefile --clean --add-data "model_registry;model_registry" --add-data "shap_background.npy;." --add-data "shap_feature_names.npy;." --add-data "src;src" --add-data "dataset;dataset" --add-data "app.py;." run_streamlit.py
    ```
-3. Ubica el ejecutable en la carpeta `dist/AlertaTempranaAcademica.exe`. Distribúyelo junto a la carpeta `dataset/`. Los usuarios finales solo requerirán hacer **doble clic** para ejecutar la plataforma.
+3. Ubica el ejecutable compilado en la carpeta `dist/AlertaTemprana.exe`. Este ejecutable encapsula Python, Streamlit y el modelo matemático, funcionando exactamente igual que en la consola.
+
+---
+
+## 🏛️ Arquitectura de Software
+
+El proyecto se estructuró bajo la filosofía de **Clean Architecture** (Arquitectura Limpia) y principios **SOLID**, garantizando un bajo acoplamiento y alta cohesión entre sus capas:
+
+```
+src/
+├── domain/            # Capa 1: Núcleo de Dominio (Entidades y Contratos abstractos)
+│   ├── entities/      # Objetos puros de negocio (Student, Prediction) sin librerías externas
+│   └── repositories/  # Interfaces/Contratos (StudentRepository, ModelRepository)
+├── application/       # Capa 2: Casos de Uso (Lógica y Reglas de Negocio)
+│   ├── train_use_case.py   # Orquestación de AutoML, tuning y evaluación
+│   ├── predict_use_case.py # Inferencia en lote e individual con cálculo SHAP perezoso
+│   └── monitor_use_case.py # Detección de Data Drift estadístico (KS-Test)
+├── infrastructure/    # Capa 3: Implementaciones y Tecnologías Externas
+│   ├── ml/            # Algoritmos específicos (CatBoost, XGBoost, Optuna) y preprocesadores
+│   ├── reports/       # Lógica técnica de generación de PDF mediante FPDF2
+│   └── repositories/  # Repositorios concretos de lectura Excel/CSV y guardado JSON
+```
+
+### Ventajas de esta arquitectura:
+* **Independencia de Frameworks**: Cambiar la interfaz gráfica (de Streamlit a Django o FastAPI) no requiere modificar la lógica de predicción ni el modelo matemático.
+* **Independencia del Modelo de ML**: Podemos reemplazar CatBoost por otra red neuronal o modelo en la capa de infraestructura sin alterar los casos de uso ni la entidad estudiante.
+* **Testabilidad**: Es posible probar los flujos lógicos simulando repositorios en memoria (Mocking) sin necesidad de cargar la base de datos Excel física.

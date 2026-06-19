@@ -59,11 +59,11 @@ streamlit run app.py
 
 ## 🚀 Lanzador Rápido para Windows (`run_app.bat`)
 
-Si estás en Windows y prefieres no interactuar con la línea de comandos, hemos creado un iniciador automático de doble clic:
+Si estás en Windows y prefieres no interactuar con la línea de comandos, hemos diseñado un iniciador automatizado nativo de doble clic:
 
-👉 [Descargar e iniciar con run_app.bat](file:///home/lmcastano/Documentos/projects/Tesisfiles/run_app.bat)
+[![Descargar run_app.bat](https://img.shields.io/badge/Descargar-run__app.bat-blue?style=for-the-badge&logo=windows)](https://raw.githubusercontent.com/blackrose99/Tesisfiles/beta/run_app.bat)
 
-Al hacer **doble clic** sobre [run_app.bat](file:///home/lmcastano/Documentos/projects/Tesisfiles/run_app.bat):
+Al hacer **doble clic** sobre `run_app.bat`:
 1. Detecta automáticamente si tienes Python instalado (si no, abre el instalador oficial).
 2. Crea el entorno virtual `.venv` e instala las dependencias de forma automatizada.
 3. Entrena el modelo si no existe un binario activo en el sistema.

@@ -1,135 +1,60 @@
 import os
-import glob
-import pandas as pd
-import numpy as np
-from joblib import dump
+import sys
+from src.infrastructure.repositories.student_repository_impl import StudentRepositoryImpl
+from src.infrastructure.repositories.model_repository_impl import ModelRepositoryImpl
+from src.application.train_use_case import TrainUseCase
 
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.utils.class_weight import compute_class_weight
-from sklearn.metrics import confusion_matrix, classification_report, roc_auc_score, average_precision_score
+def main():
+    print("==================================================")
+    # Correct Python path to find src/
+    sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+    
+    # Instantiate repositories
+    student_repo = StudentRepositoryImpl()
+    model_repo = ModelRepositoryImpl()
+    
+    # Instantiate Use Case
+    train_use_case = TrainUseCase(student_repo, model_repo)
+    
+    # Raw dataset path
+    data_path = "dataset/student_database.xlsx"
+    if not os.path.exists(data_path):
+        print(f"Error: No se encontró el archivo '{data_path}' en el directorio dataset/.")
+        return
+        
+    print(f"Iniciando entrenamiento del modelo desde: {data_path}")
+    
+    # We will exclude ANIO_INGRESO and MES_INGRESO to prevent temporal bias 
+    # and make the model generalizable to new cohorts of students.
+    exclude_features = ["ANIO_INGRESO", "MES_INGRESO"]
+    
+    # Let's train using all programs as requested (allowed_programs=None uses all)
+    # We'll set n_trials to 15 for hyperparameter tuning to keep it fast but effective.
+    try:
+        results = train_use_case.execute(
+            raw_data_path=data_path,
+            allowed_programs=None,
+            exclude_features=exclude_features,
+            n_trials=15
+        )
+        
+        print("\n==================================================")
+        print("✅ ENTRENAMIENTO COMPLETADO EXITOSAMENTE")
+        print(f"Modelo Campeón: {results['model_name']}")
+        print(f"Versión Registrada: {results['version']}")
+        print(f"Número de Features: {len(results['features_trained'])}")
+        print("Métricas en Test:")
+        print(f"  Accuracy:  {results['metrics']['accuracy']:.4f}")
+        print(f"  Precision: {results['metrics']['precision']:.4f}")
+        print(f"  Recall:    {results['metrics']['recall']:.4f}")
+        print(f"  F1-Score:  {results['metrics']['f1']:.4f}")
+        print(f"  ROC-AUC:   {results['metrics']['roc_auc']:.4f}")
+        print("==================================================")
+        
+    except Exception as e:
+        print(f"\n❌ Error durante el entrenamiento: {e}")
+        import traceback
+        traceback.print_exc()
 
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
-
-SEED = 42
-np.random.seed(SEED)
-tf.random.set_seed(SEED)
-
-def get_latest_ready_file(pattern="Base_de_datos_estudiantes_ready_step4_*.xlsx"):
-    files = glob.glob(pattern)
-    if not files:
-        return None
-    return max(files, key=os.path.getmtime)
-
-ruta = get_latest_ready_file()
-if ruta is None:
-    raise FileNotFoundError(
-        "No se encontro un archivo 'Base_de_datos_estudiantes_ready_step4_*.xlsx'. "
-        "Ejecuta primero 'Limpieza de datos.py'."
-    )
-
-print(f"Archivo de entrenamiento: {ruta}")
-df = pd.read_excel(ruta)
-
-y = df["SITUACION"].astype(int)
-
-X = df.drop(columns=["SITUACION"])
-X = X.apply(pd.to_numeric, errors="coerce")
-
-valid_mask = ~X.isna().any(axis=1) & y.notna()
-invalid_count = int((~valid_mask).sum())
-if invalid_count > 0:
-    print(f"Filas descartadas por formato invalido: {invalid_count}")
-X = X.loc[valid_mask].copy()
-y = y.loc[valid_mask].copy()
-
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.20, random_state=SEED, stratify=y
-)
-X_train, X_val, y_train, y_val = train_test_split(
-    X_train, y_train, test_size=0.20, random_state=SEED, stratify=y_train
-)
-
-scaler = StandardScaler()
-X_train_s = scaler.fit_transform(X_train)
-X_val_s   = scaler.transform(X_val)
-X_test_s  = scaler.transform(X_test)
-
-classes = np.unique(y_train)
-weights = compute_class_weight(class_weight="balanced", classes=classes, y=y_train)
-class_weight = {int(c): float(w) for c, w in zip(classes, weights)}
-print("Pesos de clase:", class_weight)
-
-input_dim = X_train_s.shape[1]
-
-model = Sequential([
-    Dense(64, activation="relu", input_shape=(input_dim,)),
-    Dropout(0.30),
-    Dense(32, activation="relu"),
-    Dropout(0.20),
-    Dense(1, activation="sigmoid")
-])
-
-model.compile(
-    optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
-    loss="binary_crossentropy",
-    metrics=[
-        tf.keras.metrics.AUC(name="auc"),
-        tf.keras.metrics.Precision(name="precision"),
-        tf.keras.metrics.Recall(name="recall"),
-    ]
-)
-
-callbacks = [
-    EarlyStopping(
-        monitor="val_auc", mode="max", patience=10, restore_best_weights=True
-    ),
-    ReduceLROnPlateau(
-        monitor="val_auc", mode="max", factor=0.5, patience=5, min_lr=1e-6, verbose=1
-    )
-]
-
-history = model.fit(
-    X_train_s, y_train,
-    validation_data=(X_val_s, y_val),
-    epochs=100,
-    batch_size=32,
-    class_weight=class_weight,
-    callbacks=callbacks,
-    verbose=1
-)
-
-print("\n=== Evaluación en TEST ===")
-test_metrics = model.evaluate(X_test_s, y_test, verbose=0)
-for name, val in zip(model.metrics_names, test_metrics):
-    print(f"{name}: {val:.4f}")
-
-y_proba = model.predict(X_test_s, verbose=0).ravel()
-print("AUC-ROC (sklearn):", round(roc_auc_score(y_test, y_proba), 4))
-print("AUC-PR  (sklearn):", round(average_precision_score(y_test, y_proba), 4))
-
-threshold = 0.50
-y_pred = (y_proba >= threshold).astype(int)
-print("\nMatriz de confusión (threshold=0.50):")
-print(confusion_matrix(y_test, y_pred))
-print("\nReporte de clasificación (threshold=0.50):")
-print(classification_report(y_test, y_pred, digits=4))
-
-model.save("modelo_desercion_nn.keras")
-print("\nModelo guardado en: modelo_desercion_nn.keras")
-
-dump(scaler, "scaler.joblib")
-print("Scaler guardado en:  scaler.joblib")
-print(f"Columnas del scaler: {list(scaler.feature_names_in_)}")
-print(f"Número de features:  {len(scaler.feature_names_in_)}")
-
-# Guardar background para SHAP
-rng = np.random.default_rng(SEED)
-bg_size = min(100, len(X_train_s))
-bg_idx = rng.choice(len(X_train_s), size=bg_size, replace=False)
-np.save("shap_background.npy", X_train_s[bg_idx])
-np.save("shap_feature_names.npy", np.array(scaler.feature_names_in_))
-print(f"Background SHAP guardado: shap_background.npy ({bg_size} filas)")
+if __name__ == "__main__":
+    main()

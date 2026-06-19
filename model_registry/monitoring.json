@@ -1,0 +1,652 @@
+[
+    {
+        "timestamp": "2026-06-18T20:52:27.776559",
+        "status": "success",
+        "overall_status": "Estable",
+        "drift_fraction": 0.09523809523809523,
+        "total_features": 63,
+        "drifted_features_count": 6,
+        "features_drift": {
+            "CREDITOSAPROBADOS": {
+                "ks_statistic": 0.11797062299510383,
+                "p_value": 0.11923847031019026,
+                "drift_detected": false
+            },
+            "UBICACION_SEMESTRAL": {
+                "ks_statistic": 0.09891777815296303,
+                "p_value": 0.2723502415564083,
+                "drift_detected": false
+            },
+            "PROMEDIO_GENERAL": {
+                "ks_statistic": 0.17050312341718724,
+                "p_value": 0.005713843621804801,
+                "drift_detected": true
+            },
+            "ESTRATO": {
+                "ks_statistic": 0.06627553604592268,
+                "p_value": 0.7549279433914537,
+                "drift_detected": false
+            },
+            "TIENE_SISBEN": {
+                "ks_statistic": 0.014146547357757893,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "INFE_VIVECONFAMILIA": {
+                "ks_statistic": 0.0264899544149924,
+                "p_value": 0.9999990115438334,
+                "drift_detected": false
+            },
+            "INFE_NUMEROFAMILIARES": {
+                "ks_statistic": 0.12315211885868647,
+                "p_value": 0.09284611712975799,
+                "drift_detected": false
+            },
+            "INFE_NUMEROHERMANOS": {
+                "ks_statistic": 0.10527773087962182,
+                "p_value": 0.21022275516060707,
+                "drift_detected": false
+            },
+            "INFE_POSICIONENHERMANOS": {
+                "ks_statistic": 0.04563396927232821,
+                "p_value": 0.9807403437779487,
+                "drift_detected": false
+            },
+            "INFE_NUMMIEMBROSTRABAJA": {
+                "ks_statistic": 0.11988856998142833,
+                "p_value": 0.10884738833201696,
+                "drift_detected": false
+            },
+            "EDAD_INGRESO": {
+                "ks_statistic": 0.25778997129832854,
+                "p_value": 2.985622958904009e-06,
+                "drift_detected": true
+            },
+            "CREDITOS_POR_SEMESTRE": {
+                "ks_statistic": 0.09680904946817491,
+                "p_value": 0.2956729370939431,
+                "drift_detected": false
+            },
+            "RENDIMIENTO_GENERAL": {
+                "ks_statistic": 0.10015195002532501,
+                "p_value": 0.25934336594124247,
+                "drift_detected": false
+            },
+            "TASA_VULNERABILIDAD": {
+                "ks_statistic": 0.06300861050143508,
+                "p_value": 0.8058771222298599,
+                "drift_detected": false
+            },
+            "APOYO_FAMILIAR": {
+                "ks_statistic": 0.07549046091507682,
+                "p_value": 0.6020057993619518,
+                "drift_detected": false
+            },
+            "PROGRAMA_ADMINISTRACION DE EMPRESAS": {
+                "ks_statistic": 0.04,
+                "p_value": 0.995733563106819,
+                "drift_detected": false
+            },
+            "PROGRAMA_ADMINISTRACION DE EMPRESAS- VIRTUAL": {
+                "ks_statistic": 0.02,
+                "p_value": 0.9999999999841972,
+                "drift_detected": false
+            },
+            "PROGRAMA_CONTADURIA PUBLICA": {
+                "ks_statistic": 0.05,
+                "p_value": 0.955998131652205,
+                "drift_detected": false
+            },
+            "PROGRAMA_CONTADURIA PUBLICA-VIRTUAL": {
+                "ks_statistic": 0.01,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "PROGRAMA_INGENIERIA AMBIENTAL": {
+                "ks_statistic": 0.01,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "PROGRAMA_INGENIERIA ELECTROMECANICA": {
+                "ks_statistic": 0.03,
+                "p_value": 0.9999738405205233,
+                "drift_detected": false
+            },
+            "PROGRAMA_INGENIERIA INDUSTRIAL": {
+                "ks_statistic": 0.0,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "PROGRAMA_OTROS": {
+                "ks_statistic": 0.03311835218639203,
+                "p_value": 0.9997887798591067,
+                "drift_detected": false
+            },
+            "PROGRAMA_PROFESIONAL EN MARKETING Y NEGOCIOS INTERNACIONALES": {
+                "ks_statistic": 0.01,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA DEPORTIVA": {
+                "ks_statistic": 0.03,
+                "p_value": 0.9999738405205233,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN CONTABILIDAD FINANCIERA": {
+                "ks_statistic": 0.06,
+                "p_value": 0.8493075395783951,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN CONTABILIDAD FINANCIERA -VIRTUAL": {
+                "ks_statistic": 0.01,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN DESARROLLO DE SISTEMAS INFORMATICOS": {
+                "ks_statistic": 0.8068816478136079,
+                "p_value": 1.9262015570700418e-69,
+                "drift_detected": true
+            },
+            "PROGRAMA_TECNOLOGIA EN ELECTRICIDAD INDUSTRIAL": {
+                "ks_statistic": 0.03,
+                "p_value": 0.9999738405205233,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN ENTRENAMIENTO DEPORTIVO": {
+                "ks_statistic": 0.04,
+                "p_value": 0.995733563106819,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN GESTION BANCARIA Y FINANCIERA": {
+                "ks_statistic": 0.03,
+                "p_value": 0.9999738405205233,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN GESTION DE LA MODA": {
+                "ks_statistic": 0.02,
+                "p_value": 0.9999999999841972,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN GESTION DE SISTEMAS DE TELECOMUNICACIONES": {
+                "ks_statistic": 0.0,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN GESTION EMPRESARIAL": {
+                "ks_statistic": 0.08,
+                "p_value": 0.528285690132485,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN GESTION EMPRESARIAL-VIRTUAL": {
+                "ks_statistic": 0.04,
+                "p_value": 0.995733563106819,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN IMPLEMENTACION DE SISTEMAS ELECTRONICOS INDUSTRIALES": {
+                "ks_statistic": 0.01,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN MANEJO DE LA INFORMACION CONTABLE": {
+                "ks_statistic": 0.03,
+                "p_value": 0.9999738405205233,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN MANEJO DE RECURSOS AMBIENTALES": {
+                "ks_statistic": 0.02,
+                "p_value": 0.9999999999841972,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN MERCADEO Y GESTION COMERCIAL": {
+                "ks_statistic": 0.09,
+                "p_value": 0.38018839358423717,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN OPERACION Y MANTENIMIENTO ELECTROMECANICO": {
+                "ks_statistic": 0.07,
+                "p_value": 0.6938036570494531,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN PRODUCCION INDUSTRIAL": {
+                "ks_statistic": 0.11,
+                "p_value": 0.17153929845326993,
+                "drift_detected": false
+            },
+            "JORNADA_DIURNA": {
+                "ks_statistic": 0.17414992402498733,
+                "p_value": 0.00444040757522654,
+                "drift_detected": true
+            },
+            "JORNADA_NOCTURNA": {
+                "ks_statistic": 0.08414992402498733,
+                "p_value": 0.4637626686426233,
+                "drift_detected": false
+            },
+            "JORNADA_OTROS": {
+                "ks_statistic": 0.0,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "JORNADA_VIRTUAL": {
+                "ks_statistic": 0.09,
+                "p_value": 0.38018839358423717,
+                "drift_detected": false
+            },
+            "GENERO_F": {
+                "ks_statistic": 0.3121796386966065,
+                "p_value": 5.186237155943964e-09,
+                "drift_detected": true
+            },
+            "GENERO_M": {
+                "ks_statistic": 0.3121796386966065,
+                "p_value": 5.186237155943964e-09,
+                "drift_detected": true
+            },
+            "GENERO_OTROS": {
+                "ks_statistic": 0.0,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_BARRANCABERMEJA": {
+                "ks_statistic": 0.07696099949349991,
+                "p_value": 0.5776587030229307,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_BUCARAMANGA": {
+                "ks_statistic": 0.058914401485733583,
+                "p_value": 0.8639398379396119,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_FLORIDABLANCA": {
+                "ks_statistic": 0.028711801451966907,
+                "p_value": 0.9999909872026829,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_GIRON": {
+                "ks_statistic": 0.016625021104170183,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_LEBRIJA": {
+                "ks_statistic": 0.008234003039000506,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_OTROS": {
+                "ks_statistic": 0.007089312848218808,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_PIEDECUESTA": {
+                "ks_statistic": 0.03865102144183691,
+                "p_value": 0.9973199751556433,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_VELEZ": {
+                "ks_statistic": 0.009662333277055546,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "INFE_SITUACIONPADRES_MADRE VIVA - PADRE DIFUNTO": {
+                "ks_statistic": 0.0291811581968597,
+                "p_value": 0.9999865013684394,
+                "drift_detected": false
+            },
+            "INFE_SITUACIONPADRES_OTROS": {
+                "ks_statistic": 0.004558500759750127,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "INFE_SITUACIONPADRES_PADRE VIVO - MADRE DIFUNTA": {
+                "ks_statistic": 0.020545331757555293,
+                "p_value": 0.9999999999403759,
+                "drift_detected": false
+            },
+            "INFE_SITUACIONPADRES_VIVOS Y CONVIVEN": {
+                "ks_statistic": 0.013096403849400641,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "INFE_SITUACIONPADRES_VIVOS Y SEPARADOS": {
+                "ks_statistic": 0.058264393044065506,
+                "p_value": 0.8723859582052058,
+                "drift_detected": false
+            },
+            "NIVEL_SISBEN_DESCONOCIDO": {
+                "ks_statistic": 0.0,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "NIVEL_SISBEN_OTROS": {
+                "ks_statistic": 0.0,
+                "p_value": 1.0,
+                "drift_detected": false
+            }
+        }
+    },
+    {
+        "timestamp": "2026-06-18T21:24:59.520560",
+        "status": "success",
+        "overall_status": "Advertencia",
+        "drift_fraction": 0.14285714285714285,
+        "total_features": 63,
+        "drifted_features_count": 9,
+        "features_drift": {
+            "CREDITOSAPROBADOS": {
+                "ks_statistic": 0.23949658487224892,
+                "p_value": 2.0845153152240467e-05,
+                "drift_detected": true
+            },
+            "UBICACION_SEMESTRAL": {
+                "ks_statistic": 0.2546901087781432,
+                "p_value": 4.592364619113716e-06,
+                "drift_detected": true
+            },
+            "PROMEDIO_GENERAL": {
+                "ks_statistic": 0.2499139893751581,
+                "p_value": 7.46714624496119e-06,
+                "drift_detected": true
+            },
+            "ESTRATO": {
+                "ks_statistic": 0.05516063749051353,
+                "p_value": 0.9114457781974783,
+                "drift_detected": false
+            },
+            "TIENE_SISBEN": {
+                "ks_statistic": 0.018798380976473565,
+                "p_value": 0.99999999999953,
+                "drift_detected": false
+            },
+            "INFE_VIVECONFAMILIA": {
+                "ks_statistic": 0.021730331393878068,
+                "p_value": 0.9999999993250983,
+                "drift_detected": false
+            },
+            "INFE_NUMEROFAMILIARES": {
+                "ks_statistic": 0.13451302807993928,
+                "p_value": 0.05317250028602119,
+                "drift_detected": false
+            },
+            "INFE_NUMEROHERMANOS": {
+                "ks_statistic": 0.11084239817859853,
+                "p_value": 0.16850597855456534,
+                "drift_detected": false
+            },
+            "INFE_POSICIONENHERMANOS": {
+                "ks_statistic": 0.053425246648115356,
+                "p_value": 0.9290132104670851,
+                "drift_detected": false
+            },
+            "INFE_NUMMIEMBROSTRABAJA": {
+                "ks_statistic": 0.12853528965342778,
+                "p_value": 0.0726620828954429,
+                "drift_detected": false
+            },
+            "EDAD_INGRESO": {
+                "ks_statistic": 0.2729041234505439,
+                "p_value": 6.579733184458932e-07,
+                "drift_detected": true
+            },
+            "CREDITOS_POR_SEMESTRE": {
+                "ks_statistic": 0.12148494814065267,
+                "p_value": 0.10312144363886891,
+                "drift_detected": false
+            },
+            "RENDIMIENTO_GENERAL": {
+                "ks_statistic": 0.24846951682266633,
+                "p_value": 8.632439090228442e-06,
+                "drift_detected": true
+            },
+            "TASA_VULNERABILIDAD": {
+                "ks_statistic": 0.04052618264609158,
+                "p_value": 0.9951841238477357,
+                "drift_detected": false
+            },
+            "APOYO_FAMILIAR": {
+                "ks_statistic": 0.08713129268909689,
+                "p_value": 0.42487077418886365,
+                "drift_detected": false
+            },
+            "PROGRAMA_ADMINISTRACION DE EMPRESAS": {
+                "ks_statistic": 0.04,
+                "p_value": 0.9959324244189979,
+                "drift_detected": false
+            },
+            "PROGRAMA_ADMINISTRACION DE EMPRESAS- VIRTUAL": {
+                "ks_statistic": 0.02,
+                "p_value": 0.9999999999864819,
+                "drift_detected": false
+            },
+            "PROGRAMA_CONTADURIA PUBLICA": {
+                "ks_statistic": 0.05,
+                "p_value": 0.9573299421965111,
+                "drift_detected": false
+            },
+            "PROGRAMA_CONTADURIA PUBLICA-VIRTUAL": {
+                "ks_statistic": 0.01,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "PROGRAMA_INGENIERIA AMBIENTAL": {
+                "ks_statistic": 0.01,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "PROGRAMA_INGENIERIA ELECTROMECANICA": {
+                "ks_statistic": 0.03,
+                "p_value": 0.9999758688718382,
+                "drift_detected": false
+            },
+            "PROGRAMA_INGENIERIA INDUSTRIAL": {
+                "ks_statistic": 0.0,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "PROGRAMA_OTROS": {
+                "ks_statistic": 0.030295977738426513,
+                "p_value": 0.9999697430761104,
+                "drift_detected": false
+            },
+            "PROGRAMA_PROFESIONAL EN MARKETING Y NEGOCIOS INTERNACIONALES": {
+                "ks_statistic": 0.01,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA DEPORTIVA": {
+                "ks_statistic": 0.03,
+                "p_value": 0.9999758688718382,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN CONTABILIDAD FINANCIERA": {
+                "ks_statistic": 0.06,
+                "p_value": 0.8524172642161247,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN CONTABILIDAD FINANCIERA -VIRTUAL": {
+                "ks_statistic": 0.01,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN DESARROLLO DE SISTEMAS INFORMATICOS": {
+                "ks_statistic": 0.8097040222615735,
+                "p_value": 2.486889858368293e-69,
+                "drift_detected": true
+            },
+            "PROGRAMA_TECNOLOGIA EN ELECTRICIDAD INDUSTRIAL": {
+                "ks_statistic": 0.03,
+                "p_value": 0.9999758688718382,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN ENTRENAMIENTO DEPORTIVO": {
+                "ks_statistic": 0.04,
+                "p_value": 0.9959324244189979,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN GESTION BANCARIA Y FINANCIERA": {
+                "ks_statistic": 0.03,
+                "p_value": 0.9999758688718382,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN GESTION DE LA MODA": {
+                "ks_statistic": 0.02,
+                "p_value": 0.9999999999864819,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN GESTION DE SISTEMAS DE TELECOMUNICACIONES": {
+                "ks_statistic": 0.0,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN GESTION EMPRESARIAL": {
+                "ks_statistic": 0.08,
+                "p_value": 0.5332381455843718,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN GESTION EMPRESARIAL-VIRTUAL": {
+                "ks_statistic": 0.04,
+                "p_value": 0.9959324244189979,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN IMPLEMENTACION DE SISTEMAS ELECTRONICOS INDUSTRIALES": {
+                "ks_statistic": 0.01,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN MANEJO DE LA INFORMACION CONTABLE": {
+                "ks_statistic": 0.03,
+                "p_value": 0.9999758688718382,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN MANEJO DE RECURSOS AMBIENTALES": {
+                "ks_statistic": 0.02,
+                "p_value": 0.9999999999864819,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN MERCADEO Y GESTION COMERCIAL": {
+                "ks_statistic": 0.09,
+                "p_value": 0.38492089263212975,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN OPERACION Y MANTENIMIENTO ELECTROMECANICO": {
+                "ks_statistic": 0.07,
+                "p_value": 0.6982652214303386,
+                "drift_detected": false
+            },
+            "PROGRAMA_TECNOLOGIA EN PRODUCCION INDUSTRIAL": {
+                "ks_statistic": 0.11,
+                "p_value": 0.17483754749819214,
+                "drift_detected": false
+            },
+            "JORNADA_DIURNA": {
+                "ks_statistic": 0.2095598279787503,
+                "p_value": 0.0003093435800038116,
+                "drift_detected": true
+            },
+            "JORNADA_NOCTURNA": {
+                "ks_statistic": 0.11955982797875031,
+                "p_value": 0.11310275324868943,
+                "drift_detected": false
+            },
+            "JORNADA_OTROS": {
+                "ks_statistic": 0.0,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "JORNADA_VIRTUAL": {
+                "ks_statistic": 0.09,
+                "p_value": 0.38492089263212975,
+                "drift_detected": false
+            },
+            "GENERO_F": {
+                "ks_statistic": 0.3067138881861877,
+                "p_value": 1.2203340675613691e-08,
+                "drift_detected": true
+            },
+            "GENERO_M": {
+                "ks_statistic": 0.3067138881861877,
+                "p_value": 1.2203340675613691e-08,
+                "drift_detected": true
+            },
+            "GENERO_OTROS": {
+                "ks_statistic": 0.0,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_BARRANCABERMEJA": {
+                "ks_statistic": 0.07645838603592209,
+                "p_value": 0.5908269640840049,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_BUCARAMANGA": {
+                "ks_statistic": 0.04792562610675436,
+                "p_value": 0.9703978192878915,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_FLORIDABLANCA": {
+                "ks_statistic": 0.024199342271692386,
+                "p_value": 0.9999999531802323,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_GIRON": {
+                "ks_statistic": 0.015474323298760435,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_LEBRIJA": {
+                "ks_statistic": 0.007455097394384012,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_OTROS": {
+                "ks_statistic": 0.007111054895016443,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_PIEDECUESTA": {
+                "ks_statistic": 0.03218568176068808,
+                "p_value": 0.9998879599608577,
+                "drift_detected": false
+            },
+            "CIUDADRESIDENCIA_VELEZ": {
+                "ks_statistic": 0.009494055147988869,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "INFE_SITUACIONPADRES_MADRE VIVA - PADRE DIFUNTO": {
+                "ks_statistic": 0.032947128762964836,
+                "p_value": 0.9998215361023861,
+                "drift_detected": false
+            },
+            "INFE_SITUACIONPADRES_OTROS": {
+                "ks_statistic": 0.0043005312420946115,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "INFE_SITUACIONPADRES_PADRE VIVO - MADRE DIFUNTA": {
+                "ks_statistic": 0.02241082721983304,
+                "p_value": 0.999999997514935,
+                "drift_detected": false
+            },
+            "INFE_SITUACIONPADRES_VIVOS Y CONVIVEN": {
+                "ks_statistic": 0.022329876043511256,
+                "p_value": 0.9999999978576387,
+                "drift_detected": false
+            },
+            "INFE_SITUACIONPADRES_VIVOS Y SEPARADOS": {
+                "ks_statistic": 0.07338730078421452,
+                "p_value": 0.6418646842291017,
+                "drift_detected": false
+            },
+            "NIVEL_SISBEN_DESCONOCIDO": {
+                "ks_statistic": 0.0,
+                "p_value": 1.0,
+                "drift_detected": false
+            },
+            "NIVEL_SISBEN_OTROS": {
+                "ks_statistic": 0.0,
+                "p_value": 1.0,
+                "drift_detected": false
+            }
+        }
+    }
+]

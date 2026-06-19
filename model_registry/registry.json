@@ -1,0 +1,47 @@
+{
+    "active_version": "v2_20260618_203911",
+    "history": [
+        {
+            "version": "v1_20260618_194823",
+            "model_name": "CatBoost",
+            "model_file": "model_v1_20260618_194823.joblib",
+            "preprocessor_file": "preprocessor_v1_20260618_194823.joblib",
+            "trained_at": "2026-06-18T19:48:24.011199",
+            "metrics": {
+                "accuracy": 0.7561865069028393,
+                "precision": 0.5716747610841297,
+                "recall": 0.7832152822494097,
+                "f1": 0.660930990762543,
+                "roc_auc": 0.8636154373701013,
+                "balanced_accuracy": 0.7638148020109347,
+                "confusion_matrix": {
+                    "tn": 7963,
+                    "fp": 2734,
+                    "fn": 1010,
+                    "tp": 3649
+                }
+            }
+        },
+        {
+            "version": "v2_20260618_203911",
+            "model_name": "CatBoost",
+            "model_file": "model_v2_20260618_203911.joblib",
+            "preprocessor_file": "preprocessor_v2_20260618_203911.joblib",
+            "trained_at": "2026-06-18T20:39:11.336700",
+            "metrics": {
+                "accuracy": 0.7633498306850742,
+                "precision": 0.5822236483234398,
+                "recall": 0.7789225155612792,
+                "f1": 0.6663606316562615,
+                "roc_auc": 0.8631882073601747,
+                "balanced_accuracy": 0.7677448887051979,
+                "confusion_matrix": {
+                    "tn": 8093,
+                    "fp": 2604,
+                    "fn": 1030,
+                    "tp": 3629
+                }
+            }
+        }
+    ]
+}

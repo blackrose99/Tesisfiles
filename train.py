@@ -5,6 +5,11 @@ from src.infrastructure.repositories.model_repository_impl import ModelRepositor
 from src.application.train_use_case import TrainUseCase
 
 def main():
+    # Windows consoles default to cp1252, which can't encode the emoji/check
+    # marks below and would otherwise crash the script after training already succeeded.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
     print("==================================================")
     # Correct Python path to find src/
     sys.path.append(os.path.abspath(os.path.dirname(__file__)))

@@ -6,9 +6,6 @@
 
 # Artefactos generados por el entrenamiento
 modelo_desercion_nn.keras
-scaler.joblib
-shap_background.npy
-shap_feature_names.npy
 
 # Archivos generados por la limpieza de datos
 Base_de_datos_estudiantes_ready_*.xlsx

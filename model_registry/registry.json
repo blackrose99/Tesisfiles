@@ -1,5 +1,5 @@
 {
-    "active_version": "v2_20260618_203911",
+    "active_version": "v3_20260619_035618",
     "history": [
         {
             "version": "v1_20260618_194823",
@@ -40,6 +40,27 @@
                     "fp": 2604,
                     "fn": 1030,
                     "tp": 3629
+                }
+            }
+        },
+        {
+            "version": "v3_20260619_035618",
+            "model_name": "CatBoost",
+            "model_file": "model_v3_20260619_035618.joblib",
+            "preprocessor_file": "preprocessor_v3_20260619_035618.joblib",
+            "trained_at": "2026-06-19T03:56:18.667039",
+            "metrics": {
+                "accuracy": 0.7556004167752018,
+                "precision": 0.5709808837355062,
+                "recall": 0.7821420905773772,
+                "f1": 0.660085137215832,
+                "roc_auc": 0.8597510745109643,
+                "balanced_accuracy": 0.7630912378660467,
+                "confusion_matrix": {
+                    "tn": 7959,
+                    "fp": 2738,
+                    "fn": 1015,
+                    "tp": 3644
                 }
             }
         }

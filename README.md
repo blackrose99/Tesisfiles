@@ -69,23 +69,43 @@ Al hacer **doble clic** sobre `run_app.bat`:
 3. Entrena el modelo si no existe un binario activo en el sistema.
 4. Lanza el servidor Streamlit y abre la aplicación en tu navegador de forma transparente.
 
+Esta opción requiere tener Python instalable en el equipo. Si quieres una app que **no dependa de Python en absoluto**, usa el `.exe` de la siguiente sección.
+
 ---
 
-## 📦 Compilación y Generación del Ejecutable Independiente (`.exe`)
+## 📦 Descargar el ejecutable (`.exe`) — para usuarios sin conocimientos técnicos
 
-Dado que nuestro servidor de desarrollo opera en Linux, no es técnicamente viable compilar un archivo binario nativo de Windows Portable Executable (`.exe`) directamente desde aquí. Sin embargo, hemos provisto un wrapper seguro llamado [run_streamlit.py](file:///home/lmcastano/Documentos/projects/Tesisfiles/run_streamlit.py) para que lo compiles en cualquier máquina con Windows.
+No necesitas instalar Python ni usar la consola. Haz clic en el botón, espera a que descargue y abre el archivo:
 
-### Comandos de compilación en Windows:
+[![Descargar AlertaTemprana.exe](https://img.shields.io/badge/Descargar-AlertaTemprana.exe-success?style=for-the-badge&logo=windows)](https://github.com/blackrose99/Tesisfiles/releases/download/latest-exe/AlertaTemprana.exe)
+
+Este enlace **siempre apunta a la última versión compilada automáticamente**: un flujo de GitHub Actions ([.github/workflows/build-exe.yml](.github/workflows/build-exe.yml)) reentrena el modelo y reconstruye el `.exe` cada vez que se sube un cambio a las ramas `main` o `beta`, y lo publica sobrescribiendo el mismo release (`latest-exe`). No tienes que hacer nada manualmente para que el enlace quede actualizado tras un push.
+
+### Persistencia: el `.exe` se comporta igual que Streamlit
+
+La primera vez que ejecutas `AlertaTemprana.exe`, se crea **junto al propio archivo `.exe`** (no en una carpeta temporal) una estructura idéntica a la del proyecto: `dataset/`, `model_registry/`, `model.joblib`, `scaler.joblib`, etc. Todo lo que hagas después —reentrenar el modelo, subir un nuevo dataset, generar reportes— se guarda ahí y **persiste entre cierres y aperturas del programa**, exactamente igual que cuando corres `streamlit run app.py` desde el repositorio. Si quieres reiniciar a un estado limpio, borra esa carpeta de datos junto al `.exe`: se regenerará con el modelo de fábrica en el siguiente arranque.
+
+> Recomendación: coloca `AlertaTemprana.exe` en su propia carpeta (por ejemplo `Documentos\AlertaTemprana\`) antes de abrirlo, ya que ahí es donde se guardarán los datos.
+
+---
+
+## 🛠️ Recompilar el `.exe` manualmente (para desarrolladores)
+
+Normalmente no necesitas hacer esto: el `.exe` se reconstruye solo en GitHub Actions con cada push. Pero si quieres generar una build local (por ejemplo para probar un cambio antes de subirlo a la rama), hazlo desde una máquina Windows:
 
 1. **Activa tu entorno virtual e instala PyInstaller**:
    ```powershell
    pip install pyinstaller
    ```
-2. **Ejecuta la compilación autocontenida de Streamlit**:
+2. **Entrena el modelo si aún no existen `model.joblib` / `scaler.joblib` / los archivos `shap_*.npy`** (el workflow de CI siempre lo hace antes de compilar):
    ```powershell
-   pyinstaller --name "AlertaTemprana" --onefile --clean --add-data "model_registry;model_registry" --add-data "shap_background.npy;." --add-data "shap_feature_names.npy;." --add-data "src;src" --add-data "dataset;dataset" --add-data "app.py;." run_streamlit.py
+   python train.py
    ```
-3. Ubica el ejecutable compilado en la carpeta `dist/AlertaTemprana.exe`. Este ejecutable encapsula Python, Streamlit y el modelo matemático, funcionando exactamente igual que en la consola.
+3. **Ejecuta la compilación autocontenida de Streamlit**:
+   ```powershell
+   pyinstaller --name "AlertaTemprana" --onefile --clean --add-data "model_registry;model_registry" --add-data "model.joblib;." --add-data "scaler.joblib;." --add-data "shap_background.npy;." --add-data "shap_feature_names.npy;." --add-data "src;src" --add-data "dataset;dataset" --add-data "app.py;." run_streamlit.py
+   ```
+4. Ubica el ejecutable compilado en la carpeta `dist/AlertaTemprana.exe`. Este ejecutable encapsula Python, Streamlit y el modelo matemático, funcionando exactamente igual que en la consola, incluida la persistencia de datos descrita arriba.
 
 ---
 

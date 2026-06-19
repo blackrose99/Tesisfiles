@@ -1,0 +1,61 @@
+name: Build AlertaTemprana.exe
+
+on:
+  push:
+    branches: [main, beta]
+    paths-ignore:
+      - "**.md"
+  workflow_dispatch:
+
+concurrency:
+  group: build-exe-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Entrenar modelo campeon (genera model.joblib, scaler.joblib y artefactos SHAP)
+        run: python train.py
+
+      - name: Compilar ejecutable independiente con PyInstaller
+        run: |
+          pyinstaller --name "AlertaTemprana" --onefile --clean `
+            --add-data "model_registry;model_registry" `
+            --add-data "model.joblib;." `
+            --add-data "scaler.joblib;." `
+            --add-data "shap_background.npy;." `
+            --add-data "shap_feature_names.npy;." `
+            --add-data "src;src" `
+            --add-data "dataset;dataset" `
+            --add-data "app.py;." `
+            run_streamlit.py
+
+      - name: Publicar como release (siempre actualizado)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-exe
+          name: "AlertaTemprana.exe (build automatico)"
+          body: |
+            Ejecutable generado automaticamente desde el commit ${{ github.sha }} en la rama ${{ github.ref_name }}.
+            Este release se sobrescribe en cada push a `main` o `beta`; el enlace de descarga del README siempre apunta a la version mas reciente.
+          prerelease: true
+          make_latest: false
+          files: dist/AlertaTemprana.exe
